@@ -18,13 +18,9 @@ var b={
     "object":{
         "nico":"maki",
         "kotiri":2.3333
-    };
+    }
 };
-"aasdgasdggds
-';adsgasdgasdg'
-'""
-"''''
-''
+
 var keys=get_keys(b);//test comment
 /*
 test

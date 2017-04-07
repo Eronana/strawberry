@@ -11,6 +11,6 @@ int main()
         fprintf(stderr,"cannot open file: %s\n",TEST_SOURCE_FILE);
         return 1;
     }
-    for(Token t;(t=lexer.next()).type!=TOKEN_EOF;t.print());
+    for(Token t;(t=lexer.next()).type!=TOKEN_EOF;t.print(stdout));
     return 0;
 }

@@ -16,7 +16,7 @@ struct Token
     TOKEN_TYPE type;
     int line, col;
     std::string raw, msg;
-    void print(FILE *fp = stdout);
+    void print(FILE *fp);
 };
 class Lexer
 {
