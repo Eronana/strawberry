@@ -55,6 +55,7 @@ T(AST_PRINT())
 struct AST
 {
     AST_METHOD_LIST(DECL_AST_BASE_METHOD)
+    virtual ~AST()=0;
 };
 
 // use smart pointer to manage memory

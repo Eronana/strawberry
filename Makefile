@@ -10,19 +10,19 @@ TARGET := $(BINDIR)/$(PROJECTNAME)
 SOURCES := $(shell find $(SRCDIR) -name *.cpp)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.cpp=.o))
 CFLAGS := -Wall -O2 -std=c++11
-
+CCC := $(CC) $(CFLAGS) -I $(INCDIR)
 $(TARGET): $(OBJECTS)
 	@echo " Linking..."
 	@mkdir -p $(BINDIR)
 	$(CC) $^ -o $@
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp include/ast.h
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) -I $(INCDIR) -c -o $@ $<
+	$(CCC) -c -o $@ $<
 
 $(BUILDDIR)/%.test.o: $(TESTDIR)/%.test.cpp
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) -I $(INCDIR) -c -o $@ $<
+	$(CCC) -c -o $@ $<
 
 $(BINDIR)/%.test: $(BUILDDIR)/%.test.o $(OBJECTS)
 	@mkdir -p $(BINDIR)
@@ -33,7 +33,17 @@ $(BINDIR)/%.test: $(BUILDDIR)/%.test.o $(OBJECTS)
 
 clean:
 	@echo " Cleaning..."
-	$(RM) -r $(BUILDDIR) $(BINDIR)
+	$(RM) -rf .depend $(BUILDDIR) $(BINDIR)
+
+depend: .depend
+
+.depend: $(SOURCES)
+	@rm -f .depend
+	@$(foreach src,$(SOURCES),$(CCC) -MM $(src) -MT $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(src:.cpp=.o)) >> .depend;)
+
+
+-include .depend
+
 
 .PHONY: clean
 .PRECIOUS: $(BUILDDIR)/%.o $(BUILDDIR)/%.test.o $(BINDIR)/%.test

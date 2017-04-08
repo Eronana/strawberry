@@ -24,6 +24,7 @@ PUTS(LBARCKET);\
 AST_PRINT_BKT_ARRAY_0()\
 PUTS(RBARCKET);
 
+AST::~AST(){}
 // Literal
 AST_NAME(Literal)::AST_NAME(Literal)(const Token &token):token(token){}
 AST_NAME(Literal)::AST_NAME(Literal)(int line,int col)
