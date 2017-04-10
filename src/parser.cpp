@@ -1,7 +1,6 @@
 #include "parser.h"
 #include "exception.h"
 
-#define ERROR(s) throw Exception(lookHead(),s)
 #define RETURN_PTR return move(ret)
 #define DEF_BINARY_OPERATOR(NAME,PRENAME) \
 AST_PTR Parser::BINARY_OPERATOR_NAME(NAME)() \
@@ -191,7 +190,7 @@ AST_PTR Parser::AssignmentExpression()
 
 AST_PTR Parser::ArrayLiteral()
 {
-    if(!acceptEat(TOKEN_LEFT_SQUARE_BARCKET))ERROR("exception a array literal start with '['");
+    if(!acceptEat(TOKEN_LEFT_SQUARE_BARCKET))PARSER_ERROR("exception a array literal start with '['");
     DEF_AST_RET(ArrayLiteral);
     while(!accept(TOKEN_RIGHT_SQUARE_BARCKET))
     {
@@ -203,7 +202,7 @@ AST_PTR Parser::ArrayLiteral()
         else
         {
             ret->nodes.push_back(AssignmentExpression());
-            if(!acceptEat(TOKEN_COMMA)&&!accept(TOKEN_RIGHT_SQUARE_BARCKET))ERROR("excepted a ',' after array element");
+            if(!acceptEat(TOKEN_COMMA)&&!accept(TOKEN_RIGHT_SQUARE_BARCKET))PARSER_ERROR("excepted a ',' after array element");
         }
     }
     eatToken();
@@ -212,12 +211,12 @@ AST_PTR Parser::ArrayLiteral()
 
 AST_PTR Parser::ObjectLiteral()
 {
-    if(!acceptEat(TOKEN_LEFT_BARCKET))ERROR("exception a object literal start with '{'");
+    if(!acceptEat(TOKEN_LEFT_BARCKET))PARSER_ERROR("exception a object literal start with '{'");
     DEF_AST_RET(ObjectLiteral);
     while(!accept(TOKEN_RIGHT_BARCKET))
     {
         ret->nodes.push_back(PropertyNameAndValue());
-        if(!acceptEat(TOKEN_COMMA)&&!accept(TOKEN_RIGHT_BARCKET))ERROR("excepted a '}' after object element");
+        if(!acceptEat(TOKEN_COMMA)&&!accept(TOKEN_RIGHT_BARCKET))PARSER_ERROR("excepted a '}' after object element");
     }
     eatToken();
     RETURN_PTR;
@@ -225,10 +224,10 @@ AST_PTR Parser::ObjectLiteral()
 
 AST_PTR Parser::PropertyNameAndValue()
 {
-    if(!accept(TOKEN_STRING_LITERAL)&&!accept(TOKEN_IDENTIFIER))ERROR("exception a identifier or string literal");
+    if(!accept(TOKEN_STRING_LITERAL)&&!accept(TOKEN_IDENTIFIER))PARSER_ERROR("exception a identifier or string literal");
     DEF_AST_RET(PropertyNameAndValue);
     ret->identifier=Literal();
-    if(!acceptEat(TOKEN_COLON))ERROR("exception a ':'");
+    if(!acceptEat(TOKEN_COLON))PARSER_ERROR("exception a ':'");
     ret->assignExpr=AssignmentExpression();
     RETURN_PTR;
 }
@@ -240,7 +239,7 @@ AST_PTR Parser::PrimaryExpression()
     {
         DEF_AST_RET(PrimaryExpression);
         ret->expr=Expression();
-        if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("excepted a ')'");
+        if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted a ')'");
         RETURN_PTR;
     }
     else if(isLiteral())
@@ -255,7 +254,7 @@ AST_PTR Parser::PrimaryExpression()
     {
         ret=ArrayLiteral();
     }
-    if(!ret)ERROR("Exception Object, Array, (Expression), Identifier or Literal");
+    if(!ret)PARSER_ERROR("Exception Object, Array, (Expression), Identifier or Literal");
     return ret;
 }
 
@@ -264,14 +263,14 @@ AST_PTR Parser::MemberPartExpression()
     if(!acceptEat(TOKEN_LEFT_SQUARE_BARCKET))return nullptr;
     DEF_AST_RET(MemberPartExpression);
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_RIGHT_SQUARE_BARCKET))ERROR("excepted ']'");
+    if(!acceptEat(TOKEN_RIGHT_SQUARE_BARCKET))PARSER_ERROR("excepted ']'");
     RETURN_PTR;
 }
 
 AST_PTR Parser::MemberPartIdentifer()
 {
     if(!acceptEat(TOKEN_DOT))return nullptr;
-    if(!accept(TOKEN_IDENTIFIER))ERROR("excepted a identifier after '.'");
+    if(!accept(TOKEN_IDENTIFIER))PARSER_ERROR("excepted a identifier after '.'");
     DEF_AST_RET(MemberPartIdentifer);
     ret->identifer=Literal();
     RETURN_PTR;
@@ -312,7 +311,7 @@ AST_PTR Parser::ArgumentList()
     while(!accept(TOKEN_RIGHT_PAREN))
     {
         ret->nodes.push_back(AssignmentExpression());
-        if(!acceptEat(",")&&!accept(TOKEN_RIGHT_PAREN))ERROR("excepted ')'");
+        if(!acceptEat(",")&&!accept(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted ')'");
     }
     eatToken();
     RETURN_PTR;
@@ -337,7 +336,7 @@ AST_PTR Parser::CallExpression(AST_PTR &&m)
 {
     DEF_AST_RET(CallExpression);
     ret->expr=move(m);
-    if(!accept(TOKEN_LEFT_PAREN))ERROR("excepted '('");
+    if(!accept(TOKEN_LEFT_PAREN))PARSER_ERROR("excepted '('");
     ret->arguments=ArgumentList();
     ret->exprPart=CallExpressionPartList();
     RETURN_PTR;
@@ -404,7 +403,7 @@ AST_PTR Parser::ConditionalExpression()
         DEF_AST_RET(ConditionalExpression);
         ret->expr=move(expr);
         ret->trueExpr=AssignmentExpression();
-        if(!acceptEat(TOKEN_COLON))ERROR("excepted ':' for conditional expression");
+        if(!acceptEat(TOKEN_COLON))PARSER_ERROR("excepted ':' for conditional expression");
         ret->falseExpr=AssignmentExpression();
         RETURN_PTR;
     }
@@ -427,7 +426,7 @@ AST_PTR Parser::Expression()
 
 AST_PTR Parser::Block()
 {
-    if(!acceptEat(TOKEN_LEFT_BARCKET))ERROR("expected a '{'");
+    if(!acceptEat(TOKEN_LEFT_BARCKET))PARSER_ERROR("expected a '{'");
     auto stmtlist=StatementList();
     DEF_AST_RET(Block);
     ret->nodes.swap(((AST_NAME(StatementList)*)stmtlist.get())->nodes);
@@ -438,7 +437,7 @@ AST_PTR Parser::Block()
 AST_PTR Parser::VariableDeclaration()
 {
     
-    if(!accept(TOKEN_IDENTIFIER))ERROR("expected a identifier");
+    if(!accept(TOKEN_IDENTIFIER))PARSER_ERROR("expected a identifier");
     DEF_AST_RET(VariableDeclaration);
     ret->identifier=Literal();
     if(acceptEat(TOKEN_ASSIGN))ret->assignExpr=AssignmentExpression();
@@ -447,10 +446,10 @@ AST_PTR Parser::VariableDeclaration()
 
 AST_PTR Parser::VariableStatement()
 {
-    if(!acceptEat("var"))ERROR("expected a 'var'");
+    if(!acceptEat("var"))PARSER_ERROR("expected a 'var'");
     DEF_AST_RET(VariableDeclarationList);
     do ret->nodes.push_back(VariableDeclaration());while(acceptEat(TOKEN_COMMA));
-    if(!acceptEat(TOKEN_SEMICOLON))ERROR("expected a ';'");
+    if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("expected a ';'");
     RETURN_PTR;
 }
 
@@ -458,17 +457,17 @@ AST_PTR Parser::ExpressionStatement()
 {
     DEF_AST_RET(ExpressionStatement);
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_SEMICOLON))ERROR("excepted a ';'");
+    if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("excepted a ';'");
     RETURN_PTR;
 }
 
 AST_PTR Parser::IfStatement()
 {
-    if(!acceptEat("if"))ERROR("excepted 'if'");
-    if(!acceptEat(TOKEN_LEFT_PAREN))ERROR("expected a '('");
+    if(!acceptEat("if"))PARSER_ERROR("excepted 'if'");
+    if(!acceptEat(TOKEN_LEFT_PAREN))PARSER_ERROR("expected a '('");
     DEF_AST_RET(IfStatement);
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("expected a ')'");
+    if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("expected a ')'");
     ret->statement=Statement();
     if(acceptEat("else"))ret->elseStatement=Statement();
     RETURN_PTR;
@@ -483,19 +482,19 @@ AST_PTR Parser::ForStatementInitial()
 
 AST_PTR Parser::ForStatement()
 {
-    if(!acceptEat("for"))ERROR("excepted 'for'");
-    if(!acceptEat(TOKEN_LEFT_PAREN))ERROR("expected a '('");
+    if(!acceptEat("for"))PARSER_ERROR("excepted 'for'");
+    if(!acceptEat(TOKEN_LEFT_PAREN))PARSER_ERROR("expected a '('");
     DEF_AST_RET(ForStatement);
     ret->init=ForStatementInitial();
     if(!acceptEat(TOKEN_SEMICOLON))
     {
         ret->expr=Expression();
-        if(!acceptEat(TOKEN_SEMICOLON))ERROR("excepted a ';'");
+        if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("excepted a ';'");
     }
     if(!acceptEat(TOKEN_RIGHT_PAREN))
     {
         ret->loopExpr=Expression();
-        if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("excepted a ')'");
+        if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted a ')'");
     }
     ret->statement=Statement();
     RETURN_PTR;
@@ -503,63 +502,63 @@ AST_PTR Parser::ForStatement()
 
 AST_PTR Parser::DoStatement()
 {
-    if(!acceptEat("do"))ERROR("excepted a 'do'");
+    if(!acceptEat("do"))PARSER_ERROR("excepted a 'do'");
     DEF_AST_RET(DoStatement);
     ret->statement=Statement();
-    if(!acceptEat("while"))ERROR("excepted a 'while'");
-    if(!acceptEat(TOKEN_LEFT_PAREN))ERROR("excepted a '('");
+    if(!acceptEat("while"))PARSER_ERROR("excepted a 'while'");
+    if(!acceptEat(TOKEN_LEFT_PAREN))PARSER_ERROR("excepted a '('");
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("excepted a ')'");
-    if(!acceptEat(TOKEN_SEMICOLON))ERROR("excepted a ';'");
+    if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted a ')'");
+    if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("excepted a ';'");
     RETURN_PTR;
 }
 
 AST_PTR Parser::WhileStatement()
 {
-    if(!acceptEat("while"))ERROR("excepted a 'while'");
-    if(!acceptEat(TOKEN_LEFT_PAREN))ERROR("excepted a '('");
+    if(!acceptEat("while"))PARSER_ERROR("excepted a 'while'");
+    if(!acceptEat(TOKEN_LEFT_PAREN))PARSER_ERROR("excepted a '('");
     DEF_AST_RET(WhileStatement);
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("excepted a ')'");
+    if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted a ')'");
     ret->statement=Statement();
     RETURN_PTR;
 }
 
 AST_PTR Parser::ReturnStatement()
 {
-    if(!accept("return"))ERROR("excepted a 'return'");
+    if(!accept("return"))PARSER_ERROR("excepted a 'return'");
     DEF_AST_RET(ReturnStatement);
     ret->literal=Literal();
     if(!acceptEat(TOKEN_SEMICOLON))
     {
         ret->expr=Expression();
-        if(!acceptEat(TOKEN_SEMICOLON))ERROR("excepted a ';'");
+        if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("excepted a ';'");
     }
     RETURN_PTR;
 }
 AST_PTR Parser::ContinueStatement()
 {
-    if(!accept("continue"))ERROR("excepted a 'continue'");
+    if(!accept("continue"))PARSER_ERROR("excepted a 'continue'");
     DEF_AST_RET(ContinueStatement);
     ret->literal=Literal();
-    if(!acceptEat(TOKEN_SEMICOLON))ERROR("excepted a ';'");
+    if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("excepted a ';'");
     RETURN_PTR;
 }
 AST_PTR Parser::BreakStatement()
 {
-    if(!accept("break"))ERROR("excepted a 'break'");
+    if(!accept("break"))PARSER_ERROR("excepted a 'break'");
     DEF_AST_RET(BreakStatement);
     ret->literal=Literal();
-    if(!acceptEat(TOKEN_SEMICOLON))ERROR("excepted a ';'");
+    if(!acceptEat(TOKEN_SEMICOLON))PARSER_ERROR("excepted a ';'");
     RETURN_PTR;
 }
 
 AST_PTR Parser::CaseClause()
 {
-    if(!acceptEat("case"))ERROR("expected a 'case'");
+    if(!acceptEat("case"))PARSER_ERROR("expected a 'case'");
     DEF_AST_RET(CaseClause);
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_COLON))ERROR("expected a ':'");
+    if(!acceptEat(TOKEN_COLON))PARSER_ERROR("expected a ':'");
     ret->stmtList=StatementList();
     RETURN_PTR;
 }
@@ -570,7 +569,7 @@ AST_PTR Parser::CaseClauseList()
     while(accept("case"))ret->nodes.push_back(CaseClause());
     if(acceptEat("default"))
     {
-        if(!acceptEat(TOKEN_COLON))ERROR("excepted a ':' after 'default'");
+        if(!acceptEat(TOKEN_COLON))PARSER_ERROR("excepted a ':' after 'default'");
         auto defaultClause=NEW_AST_NAME(CaseClause);
         defaultClause->stmtList=StatementList();
         ret->nodes.push_back(move(defaultClause));
@@ -581,20 +580,20 @@ AST_PTR Parser::CaseClauseList()
 
 AST_PTR Parser::CaseBlock()
 {
-    if(!acceptEat(TOKEN_LEFT_BARCKET))ERROR("expected a '{'");
+    if(!acceptEat(TOKEN_LEFT_BARCKET))PARSER_ERROR("expected a '{'");
     DEF_AST_RET(CaseBlock);
     ret->caseClausesList=CaseClauseList();
-    if(!acceptEat(TOKEN_RIGHT_BARCKET))ERROR("expected a '}'");
+    if(!acceptEat(TOKEN_RIGHT_BARCKET))PARSER_ERROR("expected a '}'");
     RETURN_PTR;
 }
 
 AST_PTR Parser::SwitchStatement()
 {
-    if(!acceptEat("switch"))ERROR("excepted a 'switch'");
-    if(!acceptEat(TOKEN_LEFT_PAREN))ERROR("excepted a '('");
+    if(!acceptEat("switch"))PARSER_ERROR("excepted a 'switch'");
+    if(!acceptEat(TOKEN_LEFT_PAREN))PARSER_ERROR("excepted a '('");
     DEF_AST_RET(SwitchStatement);
     ret->expr=Expression();
-    if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("excepted a ')'");
+    if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted a ')'");
     ret->caseBlock=CaseBlock();
     RETURN_PTR;
 }
@@ -605,7 +604,7 @@ AST_PTR Parser::FormalParameterList()
     DEF_AST_RET(FormalParameterList);
     do
     {
-        if(!accept(TOKEN_IDENTIFIER))ERROR("excepted a identifier");
+        if(!accept(TOKEN_IDENTIFIER))PARSER_ERROR("excepted a identifier");
         ret->nodes.push_back(Literal());
     }while(acceptEat(TOKEN_COMMA));
     RETURN_PTR;
@@ -613,11 +612,11 @@ AST_PTR Parser::FormalParameterList()
 
 AST_PTR Parser::FunctionExpression()
 {
-    if(!acceptEat("function"))ERROR("excepted a 'function'");
-    if(!acceptEat(TOKEN_LEFT_PAREN))ERROR("excepted a '('");
+    if(!acceptEat("function"))PARSER_ERROR("excepted a 'function'");
+    if(!acceptEat(TOKEN_LEFT_PAREN))PARSER_ERROR("excepted a '('");
     DEF_AST_RET(FunctionExpression);
     ret->formalParameterList=FormalParameterList();
-    if(!acceptEat(TOKEN_RIGHT_PAREN))ERROR("excepted a ')'");
+    if(!acceptEat(TOKEN_RIGHT_PAREN))PARSER_ERROR("excepted a ')'");
     ret->block=Block();
     RETURN_PTR;
 }
@@ -663,7 +662,7 @@ AST_PTR Parser::Program()
     DEF_AST_RET(Program);
     ret->stmtList=StatementList();
     if(accept(TOKEN_EOF))RETURN_PTR;
-    if(accept(TOKEN_ERROR))ERROR(lookHead().msg);
+    if(accept(TOKEN_ERROR))PARSER_ERROR(lookHead().msg);
     Statement();
     return nullptr;
 }

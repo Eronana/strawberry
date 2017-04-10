@@ -14,4 +14,7 @@ public:
     Exception(const Token &token,const std::string &err);
     void print(FILE *fp);
 };
+
+#define CHECK_ERROR(T,S) throw Exception(T,S)
+#define PARSER_ERROR(s) throw Exception(lookHead(),s)
 #endif

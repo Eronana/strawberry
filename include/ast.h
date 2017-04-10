@@ -3,8 +3,11 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 #include "narg.h"
 #include "lexer.h"
+#include "symbol.h"
+#include "symbol.h"
 
 using namespace std;
 
@@ -43,19 +46,31 @@ AST_METHOD_LIST(DECL_AST_CHILD_METHOD) \
 // declare array ast
 #define DECL_ARRAY_AST(NAME) DECL_AST_HEADER(NAME) vector<AST_PTR> nodes; DECL_AST_FOOTER
 
+
+// foreach
+#define FOR2ND(B) for(int i=1;i<B.size();i++)
+#define FOREACH(B) for(auto &x:B)
+
+
 // -------- AST as methods --------
 // here is AST methods
 #define AST_PRINT(NAME) void NAME print(FILE *fp)
+#define AST_FILL(NAME) void NAME fill(Symbol *symbol)
+#define AST_CHECK(NAME) void NAME check(Symbol *symbol)
 
 // use above methods to define method list
 #define AST_METHOD_LIST(T) \
-T(AST_PRINT())
+T(AST_PRINT())\
+T(AST_FILL())\
+T(AST_CHECK())
+
 
 // base AST
 struct AST
 {
     AST_METHOD_LIST(DECL_AST_BASE_METHOD)
     virtual ~AST()=0;
+    map<AST*,unique_ptr<Symbol>> scope_map;
 };
 
 // use smart pointer to manage memory
