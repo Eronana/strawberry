@@ -1,10 +1,10 @@
 #include "symbol.h"
-
-const int Symbol::EMPTY_SYMBOL=-1;
+#include <cstdio>
+const int Symbol::EMPTY_SYMBOL=0x7fffffff;
 
 Symbol::Symbol(Symbol *parent,SCOPENAME scope):parent(parent),scope(scope)
 {
-    if(parent->scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION)allowIndex=0;
+    if(scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION||parent->scope==SCOPE_GLOBAL)allowIndex=0;
     else allowIndex=parent->allowIndex;
 }
 

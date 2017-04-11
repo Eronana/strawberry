@@ -8,6 +8,8 @@
 #define FILLAST(M) M->fill(symbol)
 #define AST_FILL_ARRAY() {FOREACH(nodes){FILLAST(x);}}
 
+DEF_AST_METHOD(Literal,AST_FILL) {}
+
 DEF_AST_METHOD(ArrayLiteral,AST_FILL) AST_FILL_ARRAY()
 DEF_AST_METHOD(ObjectLiteral,AST_FILL) AST_FILL_ARRAY()
 DEF_AST_METHOD(Expression,AST_FILL) AST_FILL_ARRAY()

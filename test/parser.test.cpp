@@ -21,13 +21,15 @@ int main(int argc,char *argv[])
     try
     {
         ast=parser.parse();
+        puts("Parsing successed!\nResult:");
+        ast->print(stdout);
+        ast->fill(nullptr);
+        ast->check(nullptr);
     }
     catch(Exception &e)
     {
         e.print(stderr);
         return 1;
     }
-    puts("Parsing successed!\nResult:");
-    ast->print(stdout);
     return 0;
 }
