@@ -51,10 +51,16 @@ AST_METHOD_LIST(DECL_AST_CHILD_METHOD) \
 #define FOR2ND(B) for(int i=1;i<B.size();i++)
 #define FOREACH(B) for(auto &x:B)
 
+// print
+#define PUTS(STR) fputs(STR,fp)
+#define PRINTF(...) fprintf(fp,__VA_ARGS__)
+
+#define GET_LITERAL(L) (((AST_NAME(Literal)*)L.get())->token)
+
 
 // -------- AST as methods --------
 // here is AST methods
-#define AST_PRINT(NAME) void NAME print(FILE *fp)
+#define AST_PRINT(NAME) void NAME print()
 #define AST_FILL(NAME) void NAME fill(Symbol *symbol)
 #define AST_CHECK(NAME) void NAME check(Symbol *symbol)
 #define AST_CODEGEN(NAME) void NAME codeGen(Symbol *symbol)
@@ -68,11 +74,19 @@ T(AST_CODEGEN())
 
 
 // base AST
-struct AST
+class AST
 {
+  protected:
+    static map<AST*,unique_ptr<Symbol>> scope_map;
+    static int sp;
+    static int this_count;
+  public:
+    static FILE *fp;
+    static void init();
+    static void setOutput(FILE *fp);
     AST_METHOD_LIST(DECL_AST_BASE_METHOD)
     virtual ~AST()=0;
-    map<AST*,unique_ptr<Symbol>> scope_map;
+
 };
 
 // use smart pointer to manage memory

@@ -1,8 +1,6 @@
 #include "ast.h"
 
-#define PUTS(STR) fputs(STR,fp)
-#define PRINTF(...) fprintf(fp,__VA_ARGS__)
-#define PRINTAST(M) M->print(fp)
+#define PRINTAST(M) M->print()
 #define PRINT_NODES() FOREACH(nodes)PRINTAST(x)
 #define AST_PRINT_ARRAY() {PRINT_NODES();}
 

@@ -6,7 +6,6 @@
 #define CHECKAST(M) M->check(symbol)
 #define AST_CHECK_ARRAY() {FOREACH(nodes){CHECKAST(x);}}
 #define MATCHSCOPE(M) symbol->matchScope(PP_JOIN(SCOPE_,M))
-#define GET_LITERAL(L) (((AST_NAME(Literal)*)L.get())->token)
 #define GET_SCOPE() symbol=scope_map[this].get()
 
 

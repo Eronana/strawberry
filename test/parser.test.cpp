@@ -23,6 +23,7 @@ int main(int argc,char *argv[])
         ast=parser.parse();
         puts("Parsing successed!\nResult:");
         ast->print(stdout);
+        ast->init();
         ast->fill(nullptr);
         ast->check(nullptr);
     }

@@ -1,4 +1,5 @@
 #include "symbol.h"
+#include "ast.h"
 #include <cstdio>
 const int Symbol::EMPTY_SYMBOL=0x7fffffff;
 
@@ -8,13 +9,13 @@ Symbol::Symbol(Symbol *parent,SCOPENAME scope):parent(parent),scope(scope)
     else allowIndex=parent->allowIndex;
 }
 
-void Symbol::print(FILE *fp)
+void Symbol::print()
 {
     for(auto &x:table)
     {
-        fprintf(fp,"%s: %d\n",x.first.c_str(),x.second);
+        fprintf(AST::fp,"%s: %d\n",x.first.c_str(),x.second);
     }
-    if(parent)parent->print(fp);
+    if(parent)parent->print();
 }
 bool Symbol::insert(const std::string &str)
 {

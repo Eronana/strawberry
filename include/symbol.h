@@ -29,7 +29,7 @@ public:
     const SCOPENAME scope;
     int beginIndex;
     Symbol(Symbol *parent,SCOPENAME scope);
-    void print(FILE *fp);
+    void print();
     bool insert(const string &str);
     int lookup(const string &str);
     bool matchScope(SCOPENAME s);
