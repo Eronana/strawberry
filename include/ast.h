@@ -57,12 +57,14 @@ AST_METHOD_LIST(DECL_AST_CHILD_METHOD) \
 #define AST_PRINT(NAME) void NAME print(FILE *fp)
 #define AST_FILL(NAME) void NAME fill(Symbol *symbol)
 #define AST_CHECK(NAME) void NAME check(Symbol *symbol)
+#define AST_CODEGEN(NAME) void NAME codeGen(Symbol *symbol)
 
 // use above methods to define method list
 #define AST_METHOD_LIST(T) \
 T(AST_PRINT())\
 T(AST_FILL())\
-T(AST_CHECK())
+T(AST_CHECK())\
+T(AST_CODEGEN())
 
 
 // base AST
