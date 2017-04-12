@@ -41,6 +41,39 @@ test a
 
 jmp a
     ip=a
+
+swap a,b
+    swap(reg[a],reg[b])
+
+mul a,b
+    reg[a]*=reg[b]
+
+div a,b
+    reg[a]/=reg[b]
+
+mod a,b
+    reg[a]%=reg[b]
+
+add a,b
+    reg[a]+=reg[b]
+
+sub a,b
+    reg[a]-=reg[b]
+
+shl a,b
+    reg[a]<<=reg[b]
+
+shr a,b
+    reg[a]>>=reg[b]
+
+and a,b
+    reg[a]&=reg[b]
+
+xor a,b
+    reg[a]^=reg[b]
+
+or a,b
+    reg[a]|=reg[b]
 */
 DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
 {
@@ -217,4 +250,120 @@ AST_CODEGEN(ConditionalExpression)
     PRINTF("; false branch\n");
     CODEGEN(falseExpr);
     PRINTF("label_%d:\n",jmpLabel);
+}
+
+AST_CODEGEN(AssignmentExpression)
+{
+    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr)!=nullptr;
+    if(isIdentifier&&GET_LITERAL(assignOptr).type==TOKEN_ASSIGN)
+    {
+        CODEGEN(assignExpr);
+        setVariant(symbol,expr,sp);
+        return;
+    }
+    CODEGEN(assignExpr);
+    sp++;
+    CODEGEN(expr);
+    sp--;
+    int a_sp=sp,b_sp=sp+1;
+    PRINTF("swap %d,%d\n",a_sp,b_sp);
+    switch(GET_LITERAL(assignOptr).type)
+    {
+        case TOKEN_ASSIGN:
+            PRINTF("mov %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_MUL_ASSIGN:
+            PRINTF("mul %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_DIV_ASSIGN:
+            PRINTF("div %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_MOD_ASSIGN:
+            PRINTF("mod %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_ADD_ASSIGN:
+            PRINTF("add %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_SUB_ASSIGN:
+            PRINTF("sub %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_LEFT_SHIFT_ASSIGN:
+            PRINTF("shl %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_RIGHT_SHIFT_ASSIGN:
+            PRINTF("shr %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_BITWISE_AND_ASSIGN:
+            PRINTF("and %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_BITWISE_XOR_ASSIGN:
+            PRINTF("xor %d,%d\n",a_sp,b_sp);
+            break;
+        case TOKEN_BITWISE_OR_ASSIGN:
+            PRINTF("or %d,%d\n",a_sp,b_sp);
+            break;
+    }
+    if(isIdentifier)setVariant(symbol,expr,sp);
+    else PRINTF("object_reset %d\n",sp);
+}
+
+AST_CODEGEN(ExpressionStatement)
+{
+    CODEGEN(expr);
+}
+
+AST_CODEGEN(IfStatement)
+{
+    PRINTF("; if statement\n");
+    CODEGEN(expr);
+    PRINTF("test %d\n",sp);
+    int jmpLabel=nextLabel();
+    int falseLabel;
+    if(elseStatement)falseLabel=nextLabel();
+    else falseLabel=jmpLabel;
+    PRINTF("jmp label_%d\n",falseLabel);
+    PRINTF("; true branch\n");
+    CODEGEN(statement);
+    if(elseStatement)
+    {
+        PRINTF("jmp label_%d\n",jmpLabel);
+        PRINTF("label_%d:\n",falseLabel);
+        PRINTF("; false branch\n");
+        CODEGEN(falseExpr);
+    }
+    PRINTF("label_%d:\n",jmpLabel);
+}
+
+AST_CODEGEN(VariableDeclaration)
+{
+    if(!assignExpr)return;
+    CODEGEN(assignExpr);
+    setVariant(symtab,identifier,sp);
+}
+
+AST_CODEGEN(ForStatement)
+{
+    int beginLabel=nextLabel();
+    int endLabel=nextLabel();
+    int continueLabel=nextLabel();
+    continueStack.push(continueLabel);
+    breakStack.push(endLabel);
+
+    PRINTF("; for statement\n");
+    PRINTF("; init\n");
+    CODEGEN(init);
+    PRINTF("label_%d:\n",beginLabel);
+    PRINTF("; check expression\n");
+    CODEGEN(expr);
+    PRINTF("test %d\n",sp);
+    PRINTF("jmp label_%d\n",endLabel);
+    PRINTF("; statement\n");
+    CODEGEN(statement);
+    PRINTF("label_%d:\n",continueLabel);
+    PRINTF("; loop expression\n");
+    CODEGEN(loopExpr);
+    PRINTF("jmp label_%d\n",beginLabel);
+    PRINTF("label_%d:\n",endLabel);
+    continueStack.pop();
+    breakStack.pop();
 }

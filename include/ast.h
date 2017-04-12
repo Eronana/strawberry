@@ -82,6 +82,8 @@ class AST
     static int this_count;
     static int next_label;
     static int nextLabel();
+    static stack<int> continueStack;
+    static stack<int> breakStack;
   public:
     static FILE *fp;
     static void init();
