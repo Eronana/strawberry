@@ -38,6 +38,8 @@ object_reset a
 
 test a
     if (TRUE(sp[a])) skip(next_instruction);
+ftest a
+    if (FALSE(sp[a])) skip(next_instruction);
 
 jmp a
     ip=a
@@ -74,6 +76,12 @@ xor a,b
 
 or a,b
     reg[a]|=reg[b]
+
+set_rv a
+    return_value=reg[a]
+
+ret
+    return
 */
 DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
 {
@@ -119,9 +127,9 @@ DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
     for(int i=nodes.size()-1;~i;i--,sp++)
     {
         PRINTF("; arugment %d\n",i);
-        CODEGEN(vec[i]);
+        CODEGEN(nodes[i]);
     }
-    PRINTF("call %d,%u\n",sp,nodes.size());
+    PRINTF("call %d,%lu\n",sp,nodes.size());
     sp-=nodes.size();
 }
 
@@ -130,7 +138,7 @@ DEF_AST_METHOD(OperationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(CaseClauseList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(FormalParameterList,AST_CODEGEN) {}
 DEF_AST_METHOD(StatementList,AST_CODEGEN) AST_CODEGEN_ARRAY()
-DEF_AST_METHOD(VariableDeclarationList) AST_CODEGEN_ARRAY()
+DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 
 DEF_AST_METHOD(Block,AST_CODEGEN)
 {
@@ -142,8 +150,8 @@ DEF_AST_METHOD(PrimaryExpression,AST_CODEGEN)
 {
     CODEGEN(expr);
 }
-DEF_AST_METHOD(PropertyNameAndValue,AST_CODEGEN) {}
 
+DEF_AST_METHOD(PropertyNameAndValue,AST_CODEGEN) {}
 
 DEF_AST_METHOD(MemberPartExpression,AST_CODEGEN)
 {
@@ -167,7 +175,7 @@ DEF_AST_METHOD(MemberExpressionPartList,AST_CODEGEN)
 {
     FOREACH(nodes)
     {
-        PRINTF("set_this %s\n",sp);
+        PRINTF("set_this %d\n",sp);
         this_count++;
         CODEGEN(x);
     }
@@ -182,7 +190,7 @@ DEF_AST_METHOD(CallExpression,AST_CODEGEN)
     if(exprPart)CODEGEN(exprPart);
 }
 
-void variantMethod(Symbol *symbol,AST_PTR &identifier,int reg,char *method)
+void variantMethod(Symbol *symbol,AST_PTR &identifier,int reg,const char *method)
 {
     string &id=GET_LITERAL(identifier).raw;
     int allowIndex=symbol->lookup(id);
@@ -203,7 +211,7 @@ void getVariant(Symbol *symbol,AST_PTR &identifier,int reg)
     variantMethod(symbol,identifier,reg,"get");
 }
 
-AST_CODEGEN(PostfixExpression)
+DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
 {
     bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
     if(isIdentifier)getVariant(symbol,expr,sp);
@@ -217,7 +225,7 @@ AST_CODEGEN(PostfixExpression)
 }
 
 
-AST_CODEGEN(PrefixExpression)
+DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 {
     bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
     if(isIdentifier)getVariant(symbol,expr,sp);
@@ -229,13 +237,13 @@ AST_CODEGEN(PrefixExpression)
     else PRINTF("object_reset %d\n",sp);
 }
 
-AST_CODEGEN(BinaryExpression)
+DEF_AST_METHOD(BinaryExpression,AST_CODEGEN)
 {
     CODEGEN(expr);
     CODEGEN(operations);
 }
 
-AST_CODEGEN(ConditionalExpression)
+DEF_AST_METHOD(ConditionalExpression,AST_CODEGEN)
 {
     PRINTF("; conditional expression\n");
     CODEGEN(expr);
@@ -252,9 +260,9 @@ AST_CODEGEN(ConditionalExpression)
     PRINTF("label_%d:\n",jmpLabel);
 }
 
-AST_CODEGEN(AssignmentExpression)
+DEF_AST_METHOD(AssignmentExpression,AST_CODEGEN)
 {
-    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr)!=nullptr;
+    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
     if(isIdentifier&&GET_LITERAL(assignOptr).type==TOKEN_ASSIGN)
     {
         CODEGEN(assignExpr);
@@ -307,41 +315,41 @@ AST_CODEGEN(AssignmentExpression)
     else PRINTF("object_reset %d\n",sp);
 }
 
-AST_CODEGEN(ExpressionStatement)
+DEF_AST_METHOD(ExpressionStatement,AST_CODEGEN)
 {
     CODEGEN(expr);
 }
 
-AST_CODEGEN(IfStatement)
+DEF_AST_METHOD(IfStatement,AST_CODEGEN)
 {
     PRINTF("; if statement\n");
     CODEGEN(expr);
     PRINTF("test %d\n",sp);
     int jmpLabel=nextLabel();
-    int falseLabel;
-    if(elseStatement)falseLabel=nextLabel();
-    else falseLabel=jmpLabel;
-    PRINTF("jmp label_%d\n",falseLabel);
+    int elseLabel;
+    if(elseStatement)elseLabel=nextLabel();
+    else elseLabel=jmpLabel;
+    PRINTF("jmp label_%d\n",elseLabel);
     PRINTF("; true branch\n");
     CODEGEN(statement);
     if(elseStatement)
     {
         PRINTF("jmp label_%d\n",jmpLabel);
-        PRINTF("label_%d:\n",falseLabel);
-        PRINTF("; false branch\n");
-        CODEGEN(falseExpr);
+        PRINTF("label_%d:\n",elseLabel);
+        PRINTF("; else branch\n");
+        CODEGEN(elseStatement);
     }
     PRINTF("label_%d:\n",jmpLabel);
 }
 
-AST_CODEGEN(VariableDeclaration)
+DEF_AST_METHOD(VariableDeclaration,AST_CODEGEN)
 {
     if(!assignExpr)return;
     CODEGEN(assignExpr);
-    setVariant(symtab,identifier,sp);
+    setVariant(symbol,identifier,sp);
 }
 
-AST_CODEGEN(ForStatement)
+DEF_AST_METHOD(ForStatement,AST_CODEGEN)
 {
     int beginLabel=nextLabel();
     int endLabel=nextLabel();
@@ -366,4 +374,104 @@ AST_CODEGEN(ForStatement)
     PRINTF("label_%d:\n",endLabel);
     continueStack.pop();
     breakStack.pop();
+}
+
+DEF_AST_METHOD(DoStatement,AST_CODEGEN)
+{
+    int beginLabel=nextLabel();
+    int endLabel=nextLabel();
+    int continueLabel=nextLabel();
+    continueStack.push(continueLabel);
+    breakStack.push(endLabel);
+
+    PRINTF("; do statement\n");
+    PRINTF("label_%d:\n",beginLabel);
+    PRINTF("; statement\n");
+    CODEGEN(statement);
+    PRINTF("label_%d:\n",continueLabel);
+    PRINTF("; check expression\n");
+    CODEGEN(expr);
+    PRINTF("ftest %d\n",sp);
+    PRINTF("jmp label_%d\n",beginLabel);
+    PRINTF("label_%d:\n",endLabel);
+    continueStack.pop();
+    breakStack.pop();
+}
+
+DEF_AST_METHOD(WhileStatement,AST_CODEGEN)
+{
+    int beginLabel=nextLabel();
+    int endLabel=nextLabel();
+    continueStack.push(beginLabel);
+    breakStack.push(endLabel);
+
+    PRINTF("; while statement\n");
+    PRINTF("label_%d:\n",beginLabel);
+    PRINTF("; check expression\n");
+    CODEGEN(expr);
+    PRINTF("test %d\n",sp);
+    PRINTF("jmp label_%d\n",endLabel);
+    PRINTF("; statement\n");
+    CODEGEN(statement);
+    PRINTF("jmp label_%d\n",beginLabel);
+    PRINTF("label_%d:\n",endLabel);
+
+    continueStack.pop();
+    breakStack.pop();
+}
+
+DEF_AST_METHOD(CaseClause,AST_CODEGEN)
+{
+    int nextCaluse=nextLabel();
+    CODEGEN(expr);
+    PRINTF("eq %d %d\n",sp,sp-1);
+    PRINTF("jmp label_%d\n",nextCaluse);
+    CODEGEN(stmtList);
+    PRINTF("label_%d:\n",nextCaluse);
+}
+DEF_AST_METHOD(CaseBlock,AST_CODEGEN)
+{
+    int endLabel=nextLabel();
+    breakStack.push(endLabel);
+    CODEGEN(caseClausesList);
+    PRINTF("label_%d:\n",endLabel);
+    breakStack.pop();
+}
+DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
+{
+    PRINTF("; switch statement\n");
+    CODEGEN(expr);
+    sp++;
+    CODEGEN(caseBlock);
+    sp--;
+}
+DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
+{
+    PRINTF("[FUNCTION]\n");
+}
+
+DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
+{
+    if(expr)CODEGEN(expr);
+    else PRINTF("load %d,null\n",sp);
+    PRINTF("set_rv %d\n",sp);
+    PRINTF("ret\n");
+}
+
+
+DEF_AST_METHOD(ContinueStatement,AST_CODEGEN)
+{
+    printf("jmp label_%d\n",continueStack.top());
+}
+
+DEF_AST_METHOD(BreakStatement,AST_CODEGEN)
+{
+    printf("jmp label_%d\n",breakStack.top());
+}
+
+DEF_AST_METHOD(EmptyStatement,AST_CODEGEN){}
+
+DEF_AST_METHOD(Program,AST_CODEGEN)
+{
+    CODEGEN(stmtList);
 }

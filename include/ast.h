@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <stack>
 #include <map>
 #include "narg.h"
 #include "lexer.h"
@@ -52,10 +53,12 @@ AST_METHOD_LIST(DECL_AST_CHILD_METHOD) \
 #define FOREACH(B) for(auto &x:B)
 
 // print
-#define PUTS(STR) fputs(STR,fp)
-#define PRINTF(...) fprintf(fp,__VA_ARGS__)
+#define PUTS(STR) fputs(STR,AST::fp)
+#define PRINTF(...) fprintf(AST::fp,__VA_ARGS__)
 
 #define GET_LITERAL(L) (((AST_NAME(Literal)*)L.get())->token)
+
+#define GET_SCOPE() symbol=scope_map[this].get()
 
 
 // -------- AST as methods --------
