@@ -80,6 +80,8 @@ class AST
     static map<AST*,unique_ptr<Symbol>> scope_map;
     static int sp;
     static int this_count;
+    static int next_label;
+    static int nextLabel();
   public:
     static FILE *fp;
     static void init();
