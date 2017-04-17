@@ -2,6 +2,7 @@
 #include "narg.h"
 #include "exception.h"
 #include "lexer.h"
+#include "ast_method.h"
 
 #define CHECKAST(M) M->check(symbol)
 #define AST_CHECK_ARRAY() {FOREACH(nodes){CHECKAST(x);}}
@@ -69,6 +70,11 @@ DEF_AST_METHOD(PostfixExpression,AST_CHECK)
 }
 
 DEF_AST_METHOD(PrefixExpression,AST_CHECK)
+{
+    CHECKAST(expr);
+}
+
+DEF_AST_METHOD(BinaryOperationExpression,AST_CHECK)
 {
     CHECKAST(expr);
 }

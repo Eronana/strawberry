@@ -1,13 +1,14 @@
 #include "parser.h"
 #include "lexer.h"
 #include "exception.h"
+#include "ast_method.h"
 
 #define TEST_SOURCE_FILE "test/data/lexer.test.st"
 
 int main(int argc,char *argv[])
 {
     puts("======[ test parser ]======");
-    char *file=TEST_SOURCE_FILE;
+    const char *file=TEST_SOURCE_FILE;
     if(argc==1)printf("default file: %s\n",file);
     else file=argv[1];
     Lexer lexer;
@@ -22,10 +23,12 @@ int main(int argc,char *argv[])
     {
         ast=parser.parse();
         puts("Parsing successed!\nResult:");
-        ast->print(stdout);
-        ast->init();
+        astMethodInit();
+        ast->print();
         ast->fill(nullptr);
         ast->check(nullptr);
+        puts("---[ asm ]----");
+        ast->codeGen(nullptr);
     }
     catch(Exception &e)
     {

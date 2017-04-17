@@ -19,13 +19,13 @@ enum SCOPENAME
 class Symbol
 {
 private:
-    typedef map<string,int> map_si;
-    map_si table;
-    map_si globalTable;
     Symbol *parent;
+    void setParentCount(int count);
 public:
+    map<string,int> table;
     static const int EMPTY_SYMBOL;
     int allowIndex;
+    int localCount;
     const SCOPENAME scope;
     int beginIndex;
     Symbol(Symbol *parent,SCOPENAME scope);
@@ -37,5 +37,6 @@ public:
     static bool isEmpty(int index);
     static bool isGlobal(int index);
     static int getGlobalIndex(int index);
+    void setParentCount();
 };
 #endif

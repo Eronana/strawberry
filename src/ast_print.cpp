@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "ast_method.h"
 
 #define PRINTAST(M) M->print()
 #define PRINT_NODES() FOREACH(nodes)PRINTAST(x)
@@ -99,6 +100,12 @@ DEF_AST_METHOD(PostfixExpression,AST_PRINT)
 }
 
 DEF_AST_METHOD(PrefixExpression,AST_PRINT)
+{
+    PRINTAST(optr);
+    PRINTAST(expr);
+}
+
+DEF_AST_METHOD(BinaryOperationExpression,AST_PRINT)
 {
     PRINTAST(optr);
     PRINTAST(expr);

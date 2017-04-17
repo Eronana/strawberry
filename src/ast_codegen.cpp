@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "ast_method.h"
 
 #define CODEGEN(M) M->codeGen(symbol)
 #define AST_CODEGEN_ARRAY() {FOREACH(nodes){CODEGEN(x);}}
@@ -19,13 +20,13 @@ load a,b
     reg[a]=b
 
 object_set a,b
-    this[a]=b
+    this[a]=reg[b]
 
 call sp,argc
     call function
 
 object_get a,b
-    this[a]=this[b]
+    reg[b]=this[a]
 
 inc a
     reg[a]++
@@ -56,11 +57,26 @@ div a,b
 mod a,b
     reg[a]%=reg[b]
 
-add a,b
+div a,b
     reg[a]+=reg[b]
 
 sub a,b
     reg[a]-=reg[b]
+
+band a,b
+    reg[a]&=reg[b]
+
+xor a,b
+    reg[a]^=reg[b]
+
+bor a,b
+    reg[a]|=reg[b]
+
+land a,b
+    reg[a]=reg[a] && reg[b]
+
+lor a,b
+    reg[a]=reg[a] || reg[b]
 
 shl a,b
     reg[a]<<=reg[b]
@@ -68,21 +84,73 @@ shl a,b
 shr a,b
     reg[a]>>=reg[b]
 
-and a,b
-    reg[a]&=reg[b]
+less a,b
+    if(reg[a]<reg[b]) skip(next_instruction);
 
-xor a,b
-    reg[a]^=reg[b]
+gt a,b
+    if(reg[a]>reg[b]) skip(next_instruction);
 
-or a,b
-    reg[a]|=reg[b]
+le a,b
+    if(reg[a]<=reg[b]) skip(next_instruction);
+
+ge a,b
+    if(reg[a]>=reg[b]) skip(next_instruction);
+
+eq a,b
+    if(reg[a]==reg[b]) skip(next_instruction);
+
+ieq a,b
+    if(reg[a]!=reg[b]) skip(next_instruction);
 
 set_rv a
     return_value=reg[a]
 
 ret
     return
+ 
+pos a
+    reg[a]=+reg[a]
+
+neg a
+    reg[a]=-reg[a]
 */
+
+template<typename T>
+void variantMethod(Symbol *symbol,T &identifier,int reg,const char *method)
+{
+    string &id=GET_LITERAL(identifier).raw;
+    int allowIndex=symbol->lookup(id);
+    if(Symbol::isGlobal(allowIndex))PRINTF("%s_global %d,%d\n",method,Symbol::getGlobalIndex(allowIndex),reg);
+    else
+    {
+        if(method[0]=='g')PRINTF("mov %d,%d\n",reg,allowIndex);
+        else PRINTF("mov %d,%d\n",allowIndex,reg);
+    }
+}
+template<typename T>
+void setVariant(Symbol *symbol,T &identifier,int reg)
+{
+    variantMethod(symbol,identifier,reg,"set");
+}
+template<typename T>
+void getVariant(Symbol *symbol,T &identifier,int reg)
+{
+    variantMethod(symbol,identifier,reg,"get");
+}
+
+
+
+DEF_AST_METHOD(Literal,AST_CODEGEN)
+{
+    if(token.type==TOKEN_IDENTIFIER)
+    {
+        AST_PTR tmp(this);
+        getVariant(symbol,tmp,sp);
+        tmp.release();
+    }
+    
+    else PRINTF("load %d,%s\n",sp,token.raw.c_str());
+}
 DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
 {
     PRINTF("new_array %d\n",sp);
@@ -121,7 +189,7 @@ DEF_AST_METHOD(ObjectLiteral,AST_CODEGEN)
     }
     sp=sp_bak;
 }
-
+DEF_AST_METHOD(Expression,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
 {
     for(int i=nodes.size()-1;~i;i--,sp++)
@@ -134,11 +202,12 @@ DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
 }
 
 DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
-DEF_AST_METHOD(OperationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(CaseClauseList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(FormalParameterList,AST_CODEGEN) {}
 DEF_AST_METHOD(StatementList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+DEF_AST_METHOD(OperationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+
 
 DEF_AST_METHOD(Block,AST_CODEGEN)
 {
@@ -161,7 +230,7 @@ DEF_AST_METHOD(MemberPartExpression,AST_CODEGEN)
 
 DEF_AST_METHOD(MemberPartIdentifer,AST_CODEGEN)
 {
-    PRINTF("load %d,%s",sp,GET_LITERAL(identifer).raw.c_str());
+    PRINTF("load %d,\"%s\"\n",sp,GET_LITERAL(identifer).raw.c_str());
     PRINTF("object_get %d,%d\n",sp,sp);
 }
 
@@ -190,27 +259,6 @@ DEF_AST_METHOD(CallExpression,AST_CODEGEN)
     if(exprPart)CODEGEN(exprPart);
 }
 
-void variantMethod(Symbol *symbol,AST_PTR &identifier,int reg,const char *method)
-{
-    string &id=GET_LITERAL(identifier).raw;
-    int allowIndex=symbol->lookup(id);
-    if(Symbol::isGlobal(allowIndex))PRINTF("%s_global %d,%d\n",method,reg,Symbol::getGlobalIndex(allowIndex));
-    else
-    {
-        if(method[0]=='g')PRINTF("mov %d,%d\n",reg,allowIndex);
-        else PRINTF("mov %d,%d\n",allowIndex,reg);
-    }
-}
-void setVariant(Symbol *symbol,AST_PTR &identifier,int reg)
-{
-    variantMethod(symbol,identifier,reg,"set");
-}
-
-void getVariant(Symbol *symbol,AST_PTR &identifier,int reg)
-{
-    variantMethod(symbol,identifier,reg,"get");
-}
-
 DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
 {
     bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
@@ -230,17 +278,108 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
     bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
     if(isIdentifier)getVariant(symbol,expr,sp);
     else CODEGEN(expr);
-    if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc");
-    else PRINTF("dec");
-    PRINTF(" %d\n",sp);
-    if(isIdentifier)setVariant(symbol,expr,sp);
-    else PRINTF("object_reset %d\n",sp);
+
+    if(GET_LITERAL(optr).type==TOKEN_INCREMENT||GET_LITERAL(optr).type==TOKEN_DECREMENT)
+    {
+        if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc");
+        else PRINTF("dec");
+        PRINTF(" %d\n",sp);
+        if(isIdentifier)setVariant(symbol,expr,sp);
+        else PRINTF("object_reset %d\n",sp);
+        return;
+    }
+
+    switch(GET_LITERAL(optr).type)
+    {
+        case TOKEN_ADD:
+            PRINTF("pos %d\n",sp);
+            break;
+        case TOKEN_SUB:
+            PRINTF("neg %d\n",sp);
+            break;
+        case TOKEN_BITWISE_NOT:
+            PRINTF("bnot %d\n",sp);
+            break;
+        case TOKEN_NEGATION:
+            PRINTF("bneg %d\n",sp);
+            break;
+        default:
+            PRINTF("typeof %d\n",sp);
+            break;
+    }
+}
+
+DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
+{
+    puts("BinaryOperationExpression");
+    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
+    if(isIdentifier)getVariant(symbol,expr,sp);
+    else CODEGEN(expr);
+    switch(GET_LITERAL(optr).type)
+    {
+        case TOKEN_MUL:
+            PRINTF("mul %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_DIV:
+            PRINTF("div %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_MOD:
+            PRINTF("mod %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_ADD:
+            PRINTF("add %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_SUB:
+            PRINTF("sub %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_BITWISE_AND:
+            PRINTF("band %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_BITWISE_XOR:
+            PRINTF("xor %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_BITWISE_OR:
+            PRINTF("bor %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_LOGIC_AND:
+            PRINTF("land %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_LOGIC_OR:
+            PRINTF("lor %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_LEFT_SHIFT:
+            PRINTF("shl %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_RIGHT_SHIFT:
+            PRINTF("shr %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_LESS:
+            PRINTF("less %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_GREATER:
+            PRINTF("gt %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_LESS_EQUAL:
+            PRINTF("le %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_GREATER_EQUAL:
+            PRINTF("ge %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_EQUAL:
+            PRINTF("eq %d,%d\n",sp-1,sp);
+            break;
+        case TOKEN_INEQUAL:
+            PRINTF("ieq %d,%d\n",sp-1,sp);
+            break;
+    }
 }
 
 DEF_AST_METHOD(BinaryExpression,AST_CODEGEN)
 {
     CODEGEN(expr);
+    sp++;
     CODEGEN(operations);
+    sp--;
 }
 
 DEF_AST_METHOD(ConditionalExpression,AST_CODEGEN)
@@ -356,7 +495,7 @@ DEF_AST_METHOD(ForStatement,AST_CODEGEN)
     int continueLabel=nextLabel();
     continueStack.push(continueLabel);
     breakStack.push(endLabel);
-
+    GET_SCOPE();
     PRINTF("; for statement\n");
     PRINTF("; init\n");
     CODEGEN(init);
@@ -383,7 +522,7 @@ DEF_AST_METHOD(DoStatement,AST_CODEGEN)
     int continueLabel=nextLabel();
     continueStack.push(continueLabel);
     breakStack.push(endLabel);
-
+    GET_SCOPE();
     PRINTF("; do statement\n");
     PRINTF("label_%d:\n",beginLabel);
     PRINTF("; statement\n");
@@ -404,7 +543,7 @@ DEF_AST_METHOD(WhileStatement,AST_CODEGEN)
     int endLabel=nextLabel();
     continueStack.push(beginLabel);
     breakStack.push(endLabel);
-
+    GET_SCOPE();
     PRINTF("; while statement\n");
     PRINTF("label_%d:\n",beginLabel);
     PRINTF("; check expression\n");
@@ -439,6 +578,7 @@ DEF_AST_METHOD(CaseBlock,AST_CODEGEN)
 }
 DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
 {
+    GET_SCOPE();
     PRINTF("; switch statement\n");
     CODEGEN(expr);
     sp++;
@@ -447,7 +587,10 @@ DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
 }
 DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {
+    GET_SCOPE();
+    sp+=symbol->localCount;
     PRINTF("[FUNCTION]\n");
+    sp-=symbol->localCount;
 }
 
 DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
@@ -473,5 +616,8 @@ DEF_AST_METHOD(EmptyStatement,AST_CODEGEN){}
 
 DEF_AST_METHOD(Program,AST_CODEGEN)
 {
+    GET_SCOPE();
+    sp+=symbol->localCount;
     CODEGEN(stmtList);
+    sp-=symbol->localCount;
 }

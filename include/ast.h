@@ -3,8 +3,6 @@
 
 #include <memory>
 #include <vector>
-#include <stack>
-#include <map>
 #include "narg.h"
 #include "lexer.h"
 #include "symbol.h"
@@ -48,19 +46,6 @@ AST_METHOD_LIST(DECL_AST_CHILD_METHOD) \
 #define DECL_ARRAY_AST(NAME) DECL_AST_HEADER(NAME) vector<AST_PTR> nodes; DECL_AST_FOOTER
 
 
-// foreach
-#define FOR2ND(B) for(int i=1;i<B.size();i++)
-#define FOREACH(B) for(auto &x:B)
-
-// print
-#define PUTS(STR) fputs(STR,AST::fp)
-#define PRINTF(...) fprintf(AST::fp,__VA_ARGS__)
-
-#define GET_LITERAL(L) (((AST_NAME(Literal)*)L.get())->token)
-
-#define GET_SCOPE() symbol=scope_map[this].get()
-
-
 // -------- AST as methods --------
 // here is AST methods
 #define AST_PRINT(NAME) void NAME print()
@@ -77,23 +62,10 @@ T(AST_CODEGEN())
 
 
 // base AST
-class AST
+struct AST
 {
-  protected:
-    static map<AST*,unique_ptr<Symbol>> scope_map;
-    static int sp;
-    static int this_count;
-    static int next_label;
-    static int nextLabel();
-    static stack<int> continueStack;
-    static stack<int> breakStack;
-  public:
-    static FILE *fp;
-    static void init();
-    static void setOutput(FILE *fp);
     AST_METHOD_LIST(DECL_AST_BASE_METHOD)
     virtual ~AST()=0;
-
 };
 
 // use smart pointer to manage memory
@@ -129,6 +101,7 @@ DECL_AST(MemberExpression,expr,exprPart)
 DECL_AST(CallExpression,expr,arguments,exprPart)
 DECL_AST(PostfixExpression,expr,optr)
 DECL_AST(PrefixExpression,expr,optr)
+DECL_AST(BinaryOperationExpression,expr,optr)
 DECL_AST(BinaryExpression,expr,operations)
 DECL_AST(ConditionalExpression,expr,trueExpr,falseExpr)
 DECL_AST(AssignmentExpression,expr,assignOptr,assignExpr)

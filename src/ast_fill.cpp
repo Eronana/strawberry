@@ -1,10 +1,11 @@
 #include "ast.h"
 #include "exception.h"
+#include "ast_method.h"
 
 #define ADDSYMBOL(M) if(!symbol->insert(((AST_NAME(Literal)*)M.get())->token.raw))CHECK_ERROR(((AST_NAME(Literal)*)M.get())->token,"redefinition")
 #define ADD_SCOPE() scope_map.insert(make_pair(this,unique_ptr<Symbol>(symbol)))
 #define ENTRY_SCOPE(NAME) symbol=new Symbol(symbol,PP_JOIN(SCOPE_,NAME));ADD_SCOPE()
-#define EXIT_SCOPE() symbol=symbol->getParent()
+#define EXIT_SCOPE() symbol->setParentCount(),symbol=symbol->getParent()
 #define FILLAST(M) M->fill(symbol)
 #define AST_FILL_ARRAY() {FOREACH(nodes){FILLAST(x);}}
 
@@ -73,6 +74,11 @@ DEF_AST_METHOD(PostfixExpression,AST_FILL)
 }
 
 DEF_AST_METHOD(PrefixExpression,AST_FILL)
+{
+    FILLAST(expr);
+}
+
+DEF_AST_METHOD(BinaryOperationExpression,AST_FILL)
 {
     FILLAST(expr);
 }
@@ -185,5 +191,9 @@ DEF_AST_METHOD(Program,AST_FILL)
 {
     ENTRY_SCOPE(GLOBAL);
     FILLAST(stmtList);
+    for(auto &x:symbol->table)
+    {
+        printf("%s: %d\n",x.first.c_str(),x.second);
+    }
     EXIT_SCOPE();
 }

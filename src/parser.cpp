@@ -369,16 +369,19 @@ AST_PTR Parser::PostfixExpression()
 
 AST_PTR Parser::PrefixExpression()
 {
-    if(isUnaryOperator())return Operation(&Parser::PostfixExpression);
-    else 
+    if(isUnaryOperator())
     {
-        return PostfixExpression();
+        DEF_AST_RET(PrefixExpression);
+        ret->optr=Literal();
+        ret->expr=PostfixExpression();
+        RETURN_PTR;
     }
+    else return PostfixExpression();
 }
 
 AST_PTR Parser::Operation(PARSER_AST_FUNC ast_func)
 {
-    DEF_AST_RET(PrefixExpression);
+    DEF_AST_RET(BinaryOperationExpression);
     ret->optr=Literal();
     ret->expr=(this->*ast_func)();
     RETURN_PTR;

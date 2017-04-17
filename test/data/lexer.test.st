@@ -31,7 +31,7 @@ nest*/
 asdgasdgasdg
 */
 */
-for(var i=0;i<len(keys);i++)
+for(var i=0;i<keys.len;i++)
 {
     var key=keys[i];
     display(key);

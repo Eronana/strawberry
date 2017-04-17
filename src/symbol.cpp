@@ -1,5 +1,6 @@
 #include "symbol.h"
 #include "ast.h"
+#include "ast_method.h"
 #include <cstdio>
 const int Symbol::EMPTY_SYMBOL=0x7fffffff;
 
@@ -13,7 +14,7 @@ void Symbol::print()
 {
     for(auto &x:table)
     {
-        fprintf(AST::fp,"%s: %d\n",x.first.c_str(),x.second);
+        fprintf(fp,"%s: %d\n",x.first.c_str(),x.second);
     }
     if(parent)parent->print();
 }
@@ -40,7 +41,7 @@ int Symbol::lookup(const std::string &str)
 bool Symbol::matchScope(SCOPENAME s)
 {
     if(scope==s)return true;
-    if(!parent)return false;
+    if(!parent||scope==SCOPE_FUNCTION)return false;
     return parent->matchScope(s);
 }
 bool Symbol::isEmpty(int index)
@@ -56,3 +57,13 @@ int Symbol::getGlobalIndex(int index)
     return ~index;
 }
 
+void Symbol::setParentCount(int count)
+{
+    if(scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION)localCount=count;
+    else parent->setParentCount(count);
+}
+
+void Symbol::setParentCount()
+{
+    setParentCount(allowIndex);
+}
