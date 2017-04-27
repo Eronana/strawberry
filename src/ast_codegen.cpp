@@ -16,17 +16,58 @@ new_object a
 set_this a
     this=reg[a]
 
-load a,b
-    reg[a]=b
+object_get a,b
+    reg[b]=this[a]
 
 object_set a,b
     this[a]=reg[b]
 
+
+object_reset a
+    this[last_key]=reg[a]
+
+array_push a
+    this.push(reg[a])
+
+get_global a,b
+    reg[a]=global[b]
+
+set_global a,b
+    global[b]=reg[b]
+
+swap a,b
+    swap(reg[a],reg[b])
+
+load a,b
+    reg[a]=b
+
+mov a,b
+    reg[a]=reg[b]
+
 call sp,argc
     call function
 
-object_get a,b
-    reg[b]=this[a]
+ret
+    return_value=reg[a]
+    return
+
+jmp a
+    ip=a
+
+pos a
+    reg[a]=+reg[a]
+
+neg a
+    reg[a]=-reg[a]
+
+bnot a
+    reg[a]=~reg[a]
+
+lnot a
+    reg[a]=!reg[a]
+
+typeof a
+    tyoepf(reg[a])
 
 inc a
     reg[a]++
@@ -34,19 +75,11 @@ inc a
 dec a
     reg[a]--
 
-object_reset a
-    this[last_key]=reg[a]
-
-test a
+istrue a
     if (TRUE(sp[a])) skip(next_instruction);
-ftest a
+
+isfalse a
     if (FALSE(sp[a])) skip(next_instruction);
-
-jmp a
-    ip=a
-
-swap a,b
-    swap(reg[a],reg[b])
 
 mul a,b
     reg[a]*=reg[b]
@@ -57,7 +90,7 @@ div a,b
 mod a,b
     reg[a]%=reg[b]
 
-div a,b
+add a,b
     reg[a]+=reg[b]
 
 sub a,b
@@ -102,17 +135,8 @@ eq a,b
 ieq a,b
     if(reg[a]!=reg[b]) skip(next_instruction);
 
-set_rv a
-    return_value=reg[a]
-
-ret
-    return
- 
-pos a
-    reg[a]=+reg[a]
-
-neg a
-    reg[a]=-reg[a]
+halt
+    halt
 */
 
 template<typename T>
@@ -155,17 +179,15 @@ DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
 {
     PRINTF("new_array %d\n",sp);
     int sp_bak=sp++,this_bak=++this_count;
-    int value_sp=sp,key_sp=sp+1;
-    for(int i=0;i<nodes.size();i++)
+    FOREACH(nodes)
     {
-        CODEGEN(nodes[i]);
+        CODEGEN(x);
         if(this_bak!=this_count)
         {
             PRINTF("set_this %d\n",sp_bak);
             this_bak=++this_count;
         }
-        PRINTF("load %d,%d\n",key_sp,i);
-        PRINTF("object_set %d,%d\n",key_sp,value_sp);
+        PRINTF("array_push %d\n",sp);
     }
     sp=sp_bak;
 }
@@ -301,7 +323,7 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
             PRINTF("bnot %d\n",sp);
             break;
         case TOKEN_NEGATION:
-            PRINTF("bneg %d\n",sp);
+            PRINTF("lnot %d\n",sp);
             break;
         default:
             PRINTF("typeof %d\n",sp);
@@ -386,7 +408,7 @@ DEF_AST_METHOD(ConditionalExpression,AST_CODEGEN)
 {
     PRINTF("; conditional expression\n");
     CODEGEN(expr);
-    PRINTF("test %d\n",sp);
+    PRINTF("istrue %d\n",sp);
     int falseLabel=nextLabel();
     int jmpLabel=nextLabel();
     PRINTF("jmp label_%d\n",falseLabel);
@@ -463,7 +485,7 @@ DEF_AST_METHOD(IfStatement,AST_CODEGEN)
 {
     PRINTF("; if statement\n");
     CODEGEN(expr);
-    PRINTF("test %d\n",sp);
+    PRINTF("istrue %d\n",sp);
     int jmpLabel=nextLabel();
     int elseLabel;
     if(elseStatement)elseLabel=nextLabel();
@@ -502,7 +524,7 @@ DEF_AST_METHOD(ForStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",beginLabel);
     PRINTF("; check expression\n");
     CODEGEN(expr);
-    PRINTF("test %d\n",sp);
+    PRINTF("istrue %d\n",sp);
     PRINTF("jmp label_%d\n",endLabel);
     PRINTF("; statement\n");
     CODEGEN(statement);
@@ -530,7 +552,7 @@ DEF_AST_METHOD(DoStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",continueLabel);
     PRINTF("; check expression\n");
     CODEGEN(expr);
-    PRINTF("ftest %d\n",sp);
+    PRINTF("isfalse %d\n",sp);
     PRINTF("jmp label_%d\n",beginLabel);
     PRINTF("label_%d:\n",endLabel);
     continueStack.pop();
@@ -548,7 +570,7 @@ DEF_AST_METHOD(WhileStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",beginLabel);
     PRINTF("; check expression\n");
     CODEGEN(expr);
-    PRINTF("test %d\n",sp);
+    PRINTF("istrue %d\n",sp);
     PRINTF("jmp label_%d\n",endLabel);
     PRINTF("; statement\n");
     CODEGEN(statement);
@@ -597,8 +619,7 @@ DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
 {
     if(expr)CODEGEN(expr);
     else PRINTF("load %d,null\n",sp);
-    PRINTF("set_rv %d\n",sp);
-    PRINTF("ret\n");
+    PRINTF("ret %d\n",sp);
 }
 
 
