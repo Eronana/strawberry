@@ -33,13 +33,28 @@ get_global a,b
     reg[a]=global[b]
 
 set_global a,b
-    global[b]=reg[b]
+    global[b]=reg[a]
 
 swap a,b
     swap(reg[a],reg[b])
 
-load a,b
-    reg[a]=b
+// load a,b
+//     reg[a]=b
+
+nload a
+    reg[a]=null
+
+bload a,b
+    reg[a]=bool[b]
+
+iload a,b
+    reg[a]=int[b]
+
+fload a,b
+    reg[a]=float[b]
+
+sload a,b
+    reg[a]=string[b]
 
 mov a,b
     reg[a]=reg[b]
@@ -67,7 +82,7 @@ lnot a
     reg[a]=!reg[a]
 
 typeof a
-    tyoepf(reg[a])
+    typeof(reg[a])
 
 inc a
     reg[a]++

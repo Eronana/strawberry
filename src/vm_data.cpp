@@ -143,28 +143,28 @@ V_VALUE &V_VALUE::operator--()
 V_VALUE V_VALUE::operator||(const V_VALUE &rhs) const
 {
     V_VALUE ret(*this);
-    ret.bor(rhs);
+    ret.lor(rhs);
     return ret;
 }
 
 V_VALUE V_VALUE::operator&&(const V_VALUE &rhs) const
 {
     V_VALUE ret(*this);
-    ret.band(rhs);
+    ret.land(rhs);
     return ret;
 }
 
 V_VALUE V_VALUE::operator!() const
 {
     V_VALUE ret(*this);
-    ret.bnot();
+    ret.lnot();
     return ret;
 }
 
 V_VALUE V_VALUE::operator~() const
 {
     V_VALUE ret(*this);
-    ret.negation();
+    ret.bnot();
     return ret;
 }
 
@@ -248,12 +248,6 @@ void V_VALUE::negative()
     else if(type==T_FLOAT)v_float=-v_float;
 }
 
-void V_VALUE::negation()
-{
-    if(type==T_INT)v_int=~v_int;
-    else setNull();
-}
-
 void V_VALUE::positive()
 {
     if(type!=T_INT&&type!=T_FLOAT)
@@ -263,10 +257,26 @@ void V_VALUE::positive()
     }
 }
 
-void V_VALUE::bnot()
+void V_VALUE::lnot()
 {
     type=T_BOOL;
     v_bool=!toBool();
+}
+void V_VALUE::land(const V_VALUE &rhs)
+{
+    type=T_BOOL;
+    v_bool=v_bool&&rhs.toBool();
+}
+void V_VALUE::lor(const V_VALUE &rhs)
+{
+    type=T_BOOL;
+    v_bool=v_bool||rhs.toBool();
+}
+
+void V_VALUE::bnot()
+{
+    if(type==T_INT)v_int=~v_int;
+    else setNull();
 }
 
 void V_VALUE::bor(const V_VALUE &rhs)

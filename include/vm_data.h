@@ -7,14 +7,19 @@
 using namespace std;
 
 struct V_VALUE;
-typedef void (*NATIVE_FUNCTION_TYPE)(int argc, V_VALUE *argv, V_VALUE *ret);
+typedef void (*NATIVE_FUNCTION_TYPE)(int argc, V_VALUE *argv, V_VALUE &ret);
+typedef int FUNCTION_TYPE;
 typedef int NULL_TYPE;
 typedef int BOOL_TYPE;
 typedef int INT_TYPE;
 typedef double FLOAT_TYPE;
-typedef string *STRING_TYPE;
-typedef vector<V_VALUE> *ARRAY_TYPE;
-typedef map<string,V_VALUE> *OBJECT_TYPE;
+typedef string STRING_OTYPE;
+typedef vector<V_VALUE> ARRAY_OTYPE;
+typedef map<string,V_VALUE> OBJECT_OTYPE;
+
+typedef STRING_OTYPE *STRING_TYPE;
+typedef ARRAY_OTYPE*ARRAY_TYPE;
+typedef OBJECT_OTYPE *OBJECT_TYPE;
 typedef uint32_t CODE;
 typedef unsigned char BYTE;
 enum DATATYPE
@@ -24,13 +29,11 @@ enum DATATYPE
     T_BOOL,
     T_INT,
     T_FLOAT,
-    T_NATIVE_FUNCTION,
-    // function type
-    T_FUNCTION,
-    // reference type
     T_STRING,
     T_ARRAY,
-    T_OBJECT
+    T_OBJECT,
+    T_NATIVE_FUNCTION,
+    T_FUNCTION,
 };
 
 struct V_VALUE
@@ -44,7 +47,9 @@ struct V_VALUE
         FLOAT_TYPE v_float;
         STRING_TYPE v_string;
         ARRAY_TYPE v_array;
-        BYTE *gc_object;
+        OBJECT_TYPE v_object;
+        NATIVE_FUNCTION_TYPE v_native_function;
+        FUNCTION_TYPE v_function;
     };
 
     V_VALUE(bool b);
@@ -84,8 +89,10 @@ struct V_VALUE
     operator bool();
 
     void negative();
-    void negation();
     void positive();
+    void lnot();
+    void land(const V_VALUE &rhs);
+    void lor(const V_VALUE &rhs);
     void bnot();
     void bor(const V_VALUE &rhs);
     void band(const V_VALUE &rhs);
