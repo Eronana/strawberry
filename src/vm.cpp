@@ -4,13 +4,12 @@
 #include <cstdio>
 
 #define SIZEOF(a) (sizeof(a)/sizeof(a[0]))
-#define GET_NAME_LIST(NAME) #NAME ,
 #define EXTENT_INT(a,N) ((a)|(~((((a)&(1<<(N-1)))<<1)-1)))
 #define DEF_FUNC(NAME) void VirtualMachine::GET_FUNC_NAME(NAME)()
 #define CUR_INS code_raw[ip]
 #define GET_A() int a=get_A(CUR_INS);V_VALUE &A=l_stack[a];
 #define GET_AB() int a=get_a(CUR_INS),b=get_b(CUR_INS);V_VALUE &A=l_stack[a],&B=l_stack[b];
-const char *op_name[]={OP_CODE(GET_NAME_LIST)};
+
 
 const char *type_name[]={
     "null",
@@ -338,18 +337,16 @@ DEF_FUNC(HALT)
     // nothing to do
 }
 
-bool VirtualMachine::parse_data(char *filename)
+bool VirtualMachine::load(const char *filename)
 {
     FILE *fp=fopen(filename,"rb");
-
-    uint32_t magic;
-    fread(&magic,1,4,fp);
-    if(magic!=HEADER_MAGIC)
+    if(!fp)return false;
+    fread(&config,sizeof(config),1,fp);
+    if(config.magic!=HEADER_MAGIC)
     {
         fclose(fp);
         return false;
     }
-    fread(&config,sizeof(config),1,fp);
     int_table=unique_ptr<int[]>(new int[config.int_table_size]);
     float_table=unique_ptr<double[]>(new double[config.float_table_size]);
     string_table=unique_ptr<char*[]>(new char*[config.string_table_size]);

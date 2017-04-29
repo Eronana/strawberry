@@ -348,7 +348,6 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 
 DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
 {
-    puts("BinaryOperationExpression");
     bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
     if(isIdentifier)getVariant(symbol,expr,sp);
     else CODEGEN(expr);
@@ -626,7 +625,7 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {
     GET_SCOPE();
     sp+=symbol->localCount;
-    PRINTF("[FUNCTION]\n");
+    //PRINTF("[FUNCTION]\n");
     sp-=symbol->localCount;
 }
 
@@ -640,12 +639,12 @@ DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
 
 DEF_AST_METHOD(ContinueStatement,AST_CODEGEN)
 {
-    printf("jmp label_%d\n",continueStack.top());
+    PRINTF("jmp label_%d\n",continueStack.top());
 }
 
 DEF_AST_METHOD(BreakStatement,AST_CODEGEN)
 {
-    printf("jmp label_%d\n",breakStack.top());
+    PRINTF("jmp label_%d\n",breakStack.top());
 }
 
 DEF_AST_METHOD(EmptyStatement,AST_CODEGEN){}

@@ -3,7 +3,7 @@
 map<AST*,unique_ptr<Symbol>> scope_map;
 stack<int> continueStack;
 stack<int> breakStack;
-FILE *fp=stdout;
+
 int sp=0;
 int this_count=0;
 int next_label=0;

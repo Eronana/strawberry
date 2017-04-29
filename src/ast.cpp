@@ -2,6 +2,7 @@
 #include <cstdio>
 
 AST::~AST(){}
+FILE *AST::fp=stdout;
 // Literal
 AST_NAME(Literal)::AST_NAME(Literal)(const Token &token):token(token){}
 AST_NAME(Literal)::AST_NAME(Literal)(int line,int col)

@@ -50,4 +50,9 @@ T(ISTRUE)\
 T(ISFALSE)\
 T(HALT)\
 
+
+#define GET_OP_NAME(NAME) OP_##NAME,
+enum OPCODE {OP_CODE(GET_OP_NAME)};
+
+
 #endif

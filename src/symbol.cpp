@@ -14,7 +14,7 @@ void Symbol::print()
 {
     for(auto &x:table)
     {
-        fprintf(fp,"%s: %d\n",x.first.c_str(),x.second);
+        fprintf(AST::fp,"%s: %d\n",x.first.c_str(),x.second);
     }
     if(parent)parent->print();
 }

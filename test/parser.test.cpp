@@ -27,8 +27,10 @@ int main(int argc,char *argv[])
         ast->print();
         ast->fill(nullptr);
         ast->check(nullptr);
-        puts("---[ asm ]----");
+        FILE *fp=fopen("test.asm","w");
+        AST::fp=fp;
         ast->codeGen(nullptr);
+        fclose(fp);
     }
     catch(Exception &e)
     {

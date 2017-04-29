@@ -11,8 +11,8 @@ using namespace std;
 #define FOREACH(B) for(auto &x:B)
 
 // print
-#define PUTS(STR) fputs(STR,fp)
-#define PRINTF(...) fprintf(fp,__VA_ARGS__)
+#define PUTS(STR) fputs(STR,AST::fp)
+#define PRINTF(...) fprintf(AST::fp,__VA_ARGS__)
 
 #define GET_LITERAL(L) (((AST_NAME(Literal)*)L.get())->token)
 
@@ -24,7 +24,7 @@ extern stack<int> breakStack;
 extern int sp;
 extern int this_count;
 extern int next_label;
-extern FILE *fp;
+
 
 
 extern int nextLabel();

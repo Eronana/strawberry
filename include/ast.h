@@ -66,6 +66,7 @@ struct AST
 {
     AST_METHOD_LIST(DECL_AST_BASE_METHOD)
     virtual ~AST()=0;
+    static FILE *fp;
 };
 
 // use smart pointer to manage memory
