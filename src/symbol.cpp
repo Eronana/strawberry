@@ -6,8 +6,9 @@ const int Symbol::EMPTY_SYMBOL=0x7fffffff;
 
 Symbol::Symbol(Symbol *parent,SCOPENAME scope):parent(parent),scope(scope)
 {
-    if(scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION||parent->scope==SCOPE_GLOBAL)allowIndex=0;
+    if(scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION)allowIndex=0;
     else allowIndex=parent->allowIndex;
+    localCount=0;
 }
 
 void Symbol::print()
@@ -59,7 +60,10 @@ int Symbol::getGlobalIndex(int index)
 
 void Symbol::setParentCount(int count)
 {
-    if(scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION)localCount=count;
+    if(scope==SCOPE_GLOBAL||scope==SCOPE_FUNCTION)
+    {
+        if(count>localCount)localCount=count;
+    }
     else parent->setParentCount(count);
 }
 

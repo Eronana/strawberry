@@ -190,10 +190,7 @@ DEF_AST_METHOD(EmptyStatement,AST_FILL){}
 DEF_AST_METHOD(Program,AST_FILL)
 {
     ENTRY_SCOPE(GLOBAL);
+    symbol->insert("system");
     FILLAST(stmtList);
-    for(auto &x:symbol->table)
-    {
-        printf("%s: %d\n",x.first.c_str(),x.second);
-    }
     EXIT_SCOPE();
 }

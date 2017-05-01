@@ -230,6 +230,10 @@ bool V_VALUE::operator==(const V_VALUE &rhs) const
             return *v_string==*rhs.v_string;
         case T_ARRAY:
             return *v_array==*rhs.v_array;
+        case T_OBJECT:
+            return *v_object==*rhs.v_object;
+        case T_NATIVE_FUNCTION:
+            return v_native_function==rhs.v_native_function;
     }
 }
 bool V_VALUE::operator!=(const V_VALUE &rhs) const
@@ -296,6 +300,13 @@ void V_VALUE::setNull()
     type=T_NULL;
     v_int=0;
 }
+
+void V_VALUE::setBool(bool v)
+{
+    type=T_BOOL;
+    v_bool=v;
+}
+
 
 int V_VALUE::toInt() const
 {

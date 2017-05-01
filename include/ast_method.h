@@ -21,6 +21,7 @@ using namespace std;
 extern map<AST*,unique_ptr<Symbol>> scope_map;
 extern stack<int> continueStack;
 extern stack<int> breakStack;
+extern stack<int> defaultClauseStack;
 extern int sp;
 extern int this_count;
 extern int next_label;

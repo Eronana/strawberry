@@ -6,8 +6,10 @@
 #include <map>
 using namespace std;
 
+#define NATIVE_FUNCTION_SIGN(NAME) void (NAME)(int argc, V_VALUE *argv, V_VALUE &ret)
+#define GET_ARGV(N) argv[-N]
 struct V_VALUE;
-typedef void (*NATIVE_FUNCTION_TYPE)(int argc, V_VALUE *argv, V_VALUE &ret);
+typedef NATIVE_FUNCTION_SIGN(*NATIVE_FUNCTION_TYPE);
 typedef int FUNCTION_TYPE;
 typedef int NULL_TYPE;
 typedef int BOOL_TYPE;
@@ -97,6 +99,7 @@ struct V_VALUE
     void bor(const V_VALUE &rhs);
     void band(const V_VALUE &rhs);
     void setNull();
+    void setBool(bool v);
     int toInt() const;
     bool toBool() const;
     float toFloat() const;

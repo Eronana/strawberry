@@ -1,12 +1,13 @@
 #include "vm.h"
 #include "memory.h"
+#include "buildin.h"
+#include "disassembler.h"
 #include <memory>
 #include <cstdio>
 
-#define SIZEOF(a) (sizeof(a)/sizeof(a[0]))
 #define EXTENT_INT(a,N) ((a)|(~((((a)&(1<<(N-1)))<<1)-1)))
 #define DEF_FUNC(NAME) void VirtualMachine::GET_FUNC_NAME(NAME)()
-#define CUR_INS code_raw[ip]
+#define CUR_INS code_data.code_raw[ip]
 #define GET_A() int a=get_A(CUR_INS);V_VALUE &A=l_stack[a];
 #define GET_AB() int a=get_a(CUR_INS),b=get_b(CUR_INS);V_VALUE &A=l_stack[a],&B=l_stack[b];
 
@@ -48,6 +49,7 @@ DEF_FUNC(NEW_ARRAY)
     GET_A();
     A.type=T_ARRAY;
     A.v_array=NEW(ARRAY_OTYPE);
+    reg_this=A;
 }
 
 DEF_FUNC(NEW_OBJECT)
@@ -55,6 +57,7 @@ DEF_FUNC(NEW_OBJECT)
     GET_A();
     A.type=T_OBJECT;
     A.v_object=NEW(OBJECT_OTYPE);
+    reg_this=A;
 }
 
 DEF_FUNC(SET_THIS)
@@ -69,11 +72,11 @@ DEF_FUNC(OBJECT_GET)
     if(reg_this.type==T_OBJECT)
     {
         array_last_index=-1;
-        B=(*reg_this.v_object)[object_last_key=A.toString()];
+        A=(*reg_this.v_object)[object_last_key=B.toString()];
     }
     else if(reg_this.type==T_ARRAY)
     {
-        B=(*reg_this.v_array)[array_last_index=A.toInt()];
+        A=(*reg_this.v_array)[array_last_index=B.toInt()];
     }
 }
 
@@ -87,7 +90,7 @@ DEF_FUNC(OBJECT_SET)
 DEF_FUNC(OBJECT_RESET)
 {
     GET_A();
-    if(array_last_index==-1)(*reg_this.v_array)[array_last_index]=A;
+    if(array_last_index!=-1)(*reg_this.v_array)[array_last_index]=A;
     else(*reg_this.v_object)[object_last_key]=A;
 }
 
@@ -106,7 +109,7 @@ DEF_FUNC(GET_GLOBAL)
 DEF_FUNC(SET_GLOBAL)
 {
     GET_AB();
-    v_stack[b]=A;
+    v_stack[a]=B;
 }
 
 DEF_FUNC(SWAP)
@@ -125,21 +128,21 @@ DEF_FUNC(BLOAD)
 {
     GET_AB();
     A.type=T_BOOL;
-    A.v_bool=int_table[b];
+    A.v_bool=code_data.int_table[b];
 }
 
 DEF_FUNC(ILOAD)
 {
     GET_AB();
     A.type=T_INT;
-    A.v_int=int_table[b];
+    A.v_int=code_data.int_table[b];
 }
 
 DEF_FUNC(FLOAD)
 {
     GET_AB();
     A.type=T_FLOAT;
-    A.v_float=float_table[b];
+    A.v_float=code_data.float_table[b];
 }
 
 DEF_FUNC(SLOAD)
@@ -147,7 +150,7 @@ DEF_FUNC(SLOAD)
     GET_AB();
     A.type=T_STRING;
     A.v_string=NEW(STRING_OTYPE);
-    *A.v_string=string_table[b];
+    *A.v_string=code_data.string_table[b];
 }
 
 DEF_FUNC(MOV)
@@ -168,6 +171,7 @@ DEF_FUNC(CALL)
     }
     else if(func.type==T_NATIVE_FUNCTION)
     {
+        reg_ret.setNull();
         func.v_native_function(b,l_stack+a,reg_ret);
     }
 }
@@ -181,10 +185,16 @@ DEF_FUNC(RET)
     stack_frame.pop();
 }
 
+DEF_FUNC(GRV)
+{
+    GET_A();
+    A=reg_ret;
+}
+
 DEF_FUNC(JMP)
 {
     GET_A();
-    ip+=a;
+    ip=a-1;
 }
 
 DEF_FUNC(POS)
@@ -295,32 +305,33 @@ DEF_FUNC(SHR)
 DEF_FUNC(LESS)
 {
     GET_AB();
-    if(A<B)ip++;
+    A.setBool(A<B);
 }
 DEF_FUNC(GT)
 {
     GET_AB();
-    if(A>B)ip++;
+    A.setBool(A>B);
 }
 DEF_FUNC(LE)
 {
     GET_AB();
-    if(A<=B)ip++;
+    //printf("%d<=%d\n",A.toInt(),B.toInt());
+    A.setBool(A<=B);
 }
 DEF_FUNC(GE)
 {
     GET_AB();
-    if(A>=B)ip++;
+    A.setBool(A>=B);
 }
 DEF_FUNC(EQ)
 {
     GET_AB();
-    if(A==B)ip++;
+    A.setBool(A==B);
 }
 DEF_FUNC(IEQ)
 {
     GET_AB();
-    if(A!=B)ip++;
+    A.setBool(A!=B);
 }
 DEF_FUNC(ISTRUE)
 {
@@ -337,50 +348,37 @@ DEF_FUNC(HALT)
     // nothing to do
 }
 
+#define REG_BUILDIN_FUNC(NAME) registerNativeFunction(#NAME,&GET_BUILDIN_FUNC_NAME(NAME));
+VirtualMachine::VirtualMachine()
+{
+    BUILDIN_FUNC_LIST(REG_BUILDIN_FUNC)
+}
 bool VirtualMachine::load(const char *filename)
 {
-    FILE *fp=fopen(filename,"rb");
-    if(!fp)return false;
-    fread(&config,sizeof(config),1,fp);
-    if(config.magic!=HEADER_MAGIC)
-    {
-        fclose(fp);
-        return false;
-    }
-    int_table=unique_ptr<int[]>(new int[config.int_table_size]);
-    float_table=unique_ptr<double[]>(new double[config.float_table_size]);
-    string_table=unique_ptr<char*[]>(new char*[config.string_table_size]);
-    string_raw=unique_ptr<char[]>(new char[config.string_raw_size]);
-    code_raw=unique_ptr<CODE[]>(new CODE[config.code_raw_size]);
-    v_stack=unique_ptr<V_VALUE[]>(l_stack=new V_VALUE[config.stack_size]);
-
-    fread(int_table.get(),sizeof(int),config.int_table_size,fp);
-    fread(float_table.get(),sizeof(double),config.float_table_size,fp);
-    size_t tmp;
-    fread(&tmp,sizeof(tmp),1,fp); // hack for '\0' of string
-    fread(string_raw.get(),1,config.string_raw_size,fp);
-    fread(code_raw.get(),sizeof(CODE),config.code_raw_size,fp);
-    fclose(fp);
-    char *buffer=string_raw.get();
-    string_table[0]=buffer;
-    for(int i=1;i<config.string_table_size;i++)
-    {
-        while(*buffer++);
-        string_table[i]=buffer;
-    }
-    ip=config.entry_point;
+    if(!code_data.load(filename))return false;
+    v_stack=unique_ptr<V_VALUE[]>(l_stack=new V_VALUE[code_data.config.stack_size]);
+    v_stack[0].type=T_OBJECT;
+    v_stack[0].v_object=&reg_system;
     return true;
 }
 
 void VirtualMachine::run()
 {
     unsigned int t=clock();
-    for(;;ip++)
+    for(ip=code_data.config.entry_point;ip>=0&&ip<code_data.config.code_raw_size;ip++)
     {
         OPCODE ins=get_ins(CUR_INS);
+        //GET_AB();printf("[%x][%d:%d] ",CUR_INS,a,b);
+        //discode(CUR_INS,code_data,stdout);
         if(ins==OP_HALT)break;
         if(ins>=0&&ins<=OP_HALT)(this->*op_func[ins])();
         else printf("Unknow instructor: %d\n",ins);
     }
     printf("halt in %lu clocks\n",clock()-t);
+}
+
+void VirtualMachine::registerNativeFunction(const string &name,NATIVE_FUNCTION_TYPE func)
+{
+    reg_system[name].type=T_NATIVE_FUNCTION;
+    reg_system[name].v_native_function=func;
 }

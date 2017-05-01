@@ -17,7 +17,7 @@ set_this a
     this=reg[a]
 
 object_get a,b
-    reg[b]=this[a]
+    reg[a]=this[b]
 
 object_set a,b
     this[a]=reg[b]
@@ -33,7 +33,7 @@ get_global a,b
     reg[a]=global[b]
 
 set_global a,b
-    global[b]=reg[a]
+    global[a]=reg[b]
 
 swap a,b
     swap(reg[a],reg[b])
@@ -62,7 +62,7 @@ mov a,b
 call sp,argc
     call function
 
-ret
+ret a
     return_value=reg[a]
     return
 
@@ -155,28 +155,37 @@ halt
 */
 
 template<typename T>
-void variantMethod(Symbol *symbol,T &identifier,int reg,const char *method)
+void variantMethod(Symbol *symbol,T &identifier,int reg,bool isGet)
 {
     string &id=GET_LITERAL(identifier).raw;
     int allowIndex=symbol->lookup(id);
-    if(Symbol::isGlobal(allowIndex))PRINTF("%s_global %d,%d\n",method,Symbol::getGlobalIndex(allowIndex),reg);
+    if(Symbol::isGlobal(allowIndex))
+    {
+        if(isGet)PRINTF("get_global %d,%d\n",reg,Symbol::getGlobalIndex(allowIndex));
+        else PRINTF("set_global %d,%d\n",Symbol::getGlobalIndex(allowIndex),reg);
+    }
     else
     {
-        if(method[0]=='g')PRINTF("mov %d,%d\n",reg,allowIndex);
+        if(isGet)PRINTF("mov %d,%d\n",reg,allowIndex);
         else PRINTF("mov %d,%d\n",allowIndex,reg);
     }
 }
 template<typename T>
 void setVariant(Symbol *symbol,T &identifier,int reg)
 {
-    variantMethod(symbol,identifier,reg,"set");
+    variantMethod(symbol,identifier,reg,false);
 }
 template<typename T>
 void getVariant(Symbol *symbol,T &identifier,int reg)
 {
-    variantMethod(symbol,identifier,reg,"get");
+    variantMethod(symbol,identifier,reg,true);
 }
-
+bool is_identifier(const unique_ptr<AST> &expr)
+{
+    AST_NAME(Literal)* ast=dynamic_cast<AST_NAME(Literal)*>(expr.get());
+    if(ast==nullptr)return false;
+    return ast->token.type==TOKEN_IDENTIFIER;
+}
 
 
 DEF_AST_METHOD(Literal,AST_CODEGEN)
@@ -236,6 +245,7 @@ DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
     }
     PRINTF("call %d,%lu\n",sp,nodes.size());
     sp-=nodes.size();
+    PRINTF("grv %d\n",sp-1);
 }
 
 DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
@@ -298,7 +308,7 @@ DEF_AST_METHOD(CallExpression,AST_CODEGEN)
 
 DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
 {
-    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
+    bool isIdentifier=is_identifier(expr);
     if(isIdentifier)getVariant(symbol,expr,sp);
     else CODEGEN(expr);
     PRINTF("mov %d,%d\n",sp+1,sp);
@@ -312,7 +322,7 @@ DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
 
 DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 {
-    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
+    bool isIdentifier=is_identifier(expr);
     if(isIdentifier)getVariant(symbol,expr,sp);
     else CODEGEN(expr);
 
@@ -348,7 +358,7 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 
 DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
 {
-    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
+    bool isIdentifier=is_identifier(expr);
     if(isIdentifier)getVariant(symbol,expr,sp);
     else CODEGEN(expr);
     switch(GET_LITERAL(optr).type)
@@ -435,9 +445,10 @@ DEF_AST_METHOD(ConditionalExpression,AST_CODEGEN)
     PRINTF("label_%d:\n",jmpLabel);
 }
 
+
 DEF_AST_METHOD(AssignmentExpression,AST_CODEGEN)
 {
-    bool isIdentifier=dynamic_cast<AST_NAME(Literal)*>(expr.get())!=nullptr;
+    bool isIdentifier=is_identifier(expr);
     if(isIdentifier&&GET_LITERAL(assignOptr).type==TOKEN_ASSIGN)
     {
         CODEGEN(assignExpr);
@@ -598,19 +609,40 @@ DEF_AST_METHOD(WhileStatement,AST_CODEGEN)
 DEF_AST_METHOD(CaseClause,AST_CODEGEN)
 {
     int nextCaluse=nextLabel();
-    CODEGEN(expr);
-    PRINTF("eq %d %d\n",sp,sp-1);
-    PRINTF("jmp label_%d\n",nextCaluse);
-    CODEGEN(stmtList);
+    if(expr)
+    {
+        CODEGEN(expr);
+        PRINTF("eq %d,%d\n",sp,sp-1);
+        PRINTF("istrue %d\n",sp);
+        PRINTF("jmp label_%d\n",nextCaluse);
+        // hack for default caluse
+        if(nextCaluse-1==defaultClauseStack.top())PRINTF("label_%d:\n",nextLabel());
+        CODEGEN(stmtList);
+    }
+    else
+    {
+        int defaultLabel=nextLabel();
+        defaultClauseStack.top()=defaultLabel;
+        PRINTF("; default clause\n");
+        PRINTF("label_%d:\n",defaultLabel);
+        CODEGEN(stmtList);
+        // hack for default caluse
+        PRINTF("jmp label_%d\n",nextCaluse+3);
+    }
+    
     PRINTF("label_%d:\n",nextCaluse);
 }
 DEF_AST_METHOD(CaseBlock,AST_CODEGEN)
 {
     int endLabel=nextLabel();
     breakStack.push(endLabel);
+    defaultClauseStack.push(-1);
     CODEGEN(caseClausesList);
+    int defaultLabel=defaultClauseStack.top();
+    if(defaultLabel!=-1)PRINTF("jmp label_%d\n",defaultLabel);
     PRINTF("label_%d:\n",endLabel);
     breakStack.pop();
+    defaultClauseStack.pop();
 }
 DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
 {

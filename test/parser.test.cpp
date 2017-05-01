@@ -27,7 +27,7 @@ int main(int argc,char *argv[])
         ast->print();
         ast->fill(nullptr);
         ast->check(nullptr);
-        FILE *fp=fopen("test.asm","w");
+        FILE *fp=fopen("test/data/test.asm","w");
         AST::fp=fp;
         ast->codeGen(nullptr);
         fclose(fp);

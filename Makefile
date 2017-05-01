@@ -30,7 +30,9 @@ $(BINDIR)/%.test: $(BUILDDIR)/%.test.o $(OBJECTS)
 
 %.test: $(BINDIR)/%.test
 	$<
-
+assembler.test: parser.test
+disassembler.test: assembler.test
+vm.test: assembler.test
 clean:
 	@echo " Cleaning..."
 	$(RM) -rf .depend $(BUILDDIR) $(BINDIR)

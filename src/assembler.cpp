@@ -9,7 +9,9 @@
 #include <sstream>
 using namespace std;
 
-#define GET_NAME_MAP(NAME) {#NAME,GET_OP_NAME(NAME)},
+#define GET_NAME_MAP(NAME,LENGTH) {#NAME,GET_OP_NAME(NAME,LENGTH)},
+char escape_table[128];
+
 const int OP_LOAD=0x12345678;
 map<string,int> opcode={
     {"LOAD",OP_LOAD},
@@ -39,7 +41,6 @@ bool get_asm_line(ifstream &stream,string &s)
     istringstream ss(str);
     getline(ss,s,';');
     if(s.empty())return get_asm_line(stream,s);
-    for(int i=0;i<s.length();i++)if(s[i]>='a'&&s[i]<='z')s[i]-=32;
     return true;
 }
 
@@ -51,7 +52,7 @@ enum OPND_TYPE
 OPND_TYPE get_opnd_type(const string &s)
 {
     char b=s[0],e=*s.rbegin();
-    if(b=='"'&&e=='"')return OT_STRING;
+    if((b=='"'&&e=='"')||(b=='\''&e=='\''))return OT_STRING;
     if(s=="NULL")return OT_NULL;
     if(s=="TRUE")return OT_TRUE;
     if(s=="FALSE")return OT_FALSE;
@@ -75,17 +76,42 @@ OPND_TYPE get_opnd_type(const string &s)
 map<string,int> labels;
 map<string,int> string_table;
 map<FLOAT_TYPE,int> float_table;
-map<INT_TYPE,int> int_table;
+map<INT_TYPE,int> int_table={
+    {0,0},
+    {1,1}
+};
 
-vector<int> int_table_list;
+vector<int> int_table_list={0,1};
 vector<FLOAT_TYPE> float_table_list;
 vector<string> string_table_list;
 
+void init_escape_table()
+{
+    if(escape_table[1])return;
+    for(int i=0;i<sizeof(escape_table);i++)escape_table[i]=i;
+    escape_table['0']='\0';
+    escape_table['e']='\e';
+    escape_table['a']='\a';
+    escape_table['b']='\b';
+    escape_table['t']='\t';
+    escape_table['n']='\n';
+    escape_table['v']='\v';
+    escape_table['f']='\f';
+    escape_table['r']='\r';
+}
+string process_string(const string &s)
+{
+    string x;
+    for(int i=1;i<s.length()-1;i++)
+        x.push_back(s[i]=='\\'?escape_table[s[++i]]:s[i]);
+    return x;
+}
 bool get_opnd(const string &s,int &v)
 {
     int opnd_int;
     FLOAT_TYPE opnd_float;
     string opnd_string;
+    init_escape_table();
     switch(get_opnd_type(s))
     {
         case OT_INT:
@@ -100,7 +126,7 @@ bool get_opnd(const string &s,int &v)
             break;
         case OT_FLOAT:
             opnd_float=atof(s.c_str());
-            if(!int_table.count(opnd_float))
+            if(!float_table.count(opnd_float))
             {
                 v=float_table.size();
                 float_table[opnd_float]=v;
@@ -109,15 +135,14 @@ bool get_opnd(const string &s,int &v)
             else v=float_table[opnd_float];
             break;
         case OT_STRING:
-            opnd_string=string(s,1,s.length()-2);
-
+            opnd_string=process_string(s);
             if(!string_table.count(opnd_string))
             {
                 v=string_table.size();
                 string_table[opnd_string]=v;
                 string_table_list.push_back(opnd_string);
             }
-            else v=int_table[opnd_int];
+            else v=string_table[opnd_string];
             break;
         case OT_LABEL:
             if(!labels.count(s))return false;
@@ -138,13 +163,36 @@ string get_opnd_string(const string &s)
 {
     return string(s,1,s.length()-2);
 }
-
+string &toUpperCase(string &s)
+{
+    for(int i=0;i<s.length();i++)if(s[i]>='a'&&s[i]<='z')s[i]-=32;
+    return s;
+}
 struct S_CODE
 {
     int line;
     string oper;
     vector<string> opnd;
 };
+void get_opnds(const string &s,vector<string> &opnd)
+{
+    for(int i=0;i<s.length();i++)if(s[i]!=' ')
+    {
+        int x=i;
+        if(s[i]=='"'||s[i]=='\'')
+        {
+            char c=s[i];
+            while(!(s[i++]!='\\'&&s[i]==c));
+            opnd.push_back(s.substr(x,i-x+1));
+        }
+        else
+        {
+            while(++i<s.length()&&s[i]!=',');
+            opnd.push_back(s.substr(x,i-x));
+            toUpperCase(*opnd.rbegin());
+        }
+    }
+}
 vector<S_CODE> s_code;
 bool load_asmfile(const char *filename)
 {
@@ -153,13 +201,16 @@ bool load_asmfile(const char *filename)
     string line;
     for(int lines=1;get_asm_line(asms,line);lines++)
     {
-        istringstream s(line);
-        string oper;
-        getline(s,oper,' ');
-        string t;
+        int pos=line.find(' ');
+        string oper=line.substr(0,pos);
+        toUpperCase(oper);
         vector<string> opnd;
-        while(getline(s,t,','))opnd.push_back(t);
-        if(opnd.empty()&&*oper.rbegin()==':')labels[string(oper,0,oper.size()-1)]=s_code.size();
+        if(pos!=string::npos)get_opnds(line.substr(pos+1),opnd);
+        if(opnd.empty()&&*oper.rbegin()==':')
+        {
+            string label=string(oper,0,oper.size()-1);
+            labels[toUpperCase(label)]=s_code.size();
+        }
         else s_code.push_back({lines,oper,opnd});
     }
     asms.close();
@@ -173,7 +224,7 @@ bool gen_code()
     {
         if(!opcode.count(x.oper))
         {
-            fprintf(stderr,"Error(%d): unknown instruction \"%s\"\n",x.line,x.oper.c_str());
+            fprintf(stderr,"Error(line %d): unknown instruction \"%s\"\n",x.line,x.oper.c_str());
             return false;
         }
         int op=opcode[x.oper];
@@ -182,7 +233,7 @@ bool gen_code()
 
             if(x.opnd.size()!=2)
             {
-                fprintf(stderr,"Error(%d): too much operand\n",x.line);
+                fprintf(stderr,"Error(line %d): too much operand\n",x.line);
                 return false;
             }
             switch(get_opnd_type(x.opnd[1]))
@@ -206,7 +257,7 @@ bool gen_code()
                     op=OP_SLOAD;
                     break;
                 default:
-                    fprintf(stderr,"Error(%d): incorrect operand\n",x.line);
+                    fprintf(stderr,"Error(line %d): incorrect operand\n",x.line);
                     return false;
             }
             int v0=get_opnd_int(x.opnd[0]),v1;
@@ -223,10 +274,10 @@ bool gen_code()
                     opnds[i]=get_opnd_int(x.opnd[i]);
                     break;
                 case OT_LABEL:
-                    if(!get_opnd(x.opnd[i],opnds[i]))return fprintf(stderr,"Error(%d): cannot found label \"%s\"\n",x.line,x.opnd[i].c_str()),false;
+                    if(!get_opnd(x.opnd[i],opnds[i]))return fprintf(stderr,"Error(line %d): cannot found label \"%s\"\n",x.line,x.opnd[i].c_str()),false;
                     break;
                 default:
-                fprintf(stderr,"Error(%d): incorrect operand, operand must be integer or label\n",x.line);
+                fprintf(stderr,"Error(line %d): incorrect operand, operand must be integer or label\n",x.line);
                 return false;
             }
         }
@@ -242,7 +293,7 @@ bool gen_code()
                 code.push_back(gcode((OPCODE)op,opnds[0],opnds[1]));
                 break;
             default:
-                fprintf(stderr,"Error(%d): too much operand\n",x.line);
+                fprintf(stderr,"Error(line %d): too much operand\n",x.line);
                 return false;
         }
     }
@@ -251,35 +302,7 @@ bool gen_code()
 
 bool generate_bin(const char *filename)
 {
-    FILE *fp=fopen(filename,"wb");
-    if(!fp)return false;
-    CodeConfig code_config;
-    code_config.magic=HEADER_MAGIC;
-    code_config.int_table_size=int_table.size();
-    code_config.float_table_size=float_table.size();
-    code_config.string_table_size=string_table.size();
-    code_config.string_raw_size=0;
-    code_config.entry_point=labels["MAIN"];
-    code_config.code_raw_size=code.size();
-    for(int i=0;i<string_table_list.size();i++)code_config.code_raw_size+=string_table_list[i].length()+1;
-    fwrite(&code_config,sizeof(code_config),1,fp);
-
-    // int table
-    fwrite(&int_table_list[0],sizeof(int_table_list[0]),int_table_list.size(),fp);
-    // float table
-    fwrite(&float_table_list[0],sizeof(float_table_list[0]),float_table_list.size(),fp);
-    size_t v=0;
-    fwrite(&v,sizeof(v),1,fp); //string hack for vm
-    //string table
-    for(int i=0;i<string_table_list.size();i++)
-    {
-        string &s=string_table_list[i];
-        fwrite(s.c_str(),1,s.length()+1,fp);
-    }
-    //code
-    fwrite(&code[0],sizeof(code[0]),code.size(),fp);
-    fclose(fp);
-    return true;
+    return write_code_data(filename,labels["MAIN"],int_table_list,float_table_list,string_table_list,code);
 }
 
 
