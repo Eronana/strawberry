@@ -2,14 +2,14 @@
 #define _QUEUE_H_
 #include <vector>
 template <typename T>
-class queue
+class Queue
 {
 private:
   std::vector<T> data;
   int base;
 
 public:
-  queue() : base(0) {}
+  Queue() : base(0) {}
   size_t size() const
   {
     return data.size() - base;

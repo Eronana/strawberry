@@ -22,7 +22,7 @@ class Lexer
 {
   private:
     FILE *fp;
-    queue<char> lookhead_buffer;
+    Queue<char> lookhead_buffer;
     int line_number;
     int col_number;
     char lookHead(int index = 0);
