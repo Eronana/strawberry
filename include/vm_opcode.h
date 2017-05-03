@@ -1,55 +1,171 @@
 #ifndef _OPCODE_H_
 #define _OPCODE_H_
 
+/*
+load_global a
+    st.push(global[a])
+
+store_global a
+    global[a]=st.pop()
+
+load a
+    st.push(local[a])
+
+store a
+    local[a]=st.pop()
+
+push a
+    st.push(a)
+
+pop
+    st.pop()
+
+new_array
+    st.push(new Array)
+
+new_object
+    st.push(new Object)
+
+set_this
+    reg_this=st.pop()
+
+array_push
+    reg_this.push_back(st.pop())
+
+object_get
+    st.push(reg_this[st.pop()])
+
+object_set
+    key=st.pop()
+    val=st.pop()
+    reg_this[key]=val
+
+object_reset
+    this[last_key]=st.pop()
+
+dup
+    st.push(st.pop())
+
+swap
+    swap(st.top(),st.stop())
+
+inc
+    st.top()++
+
+dec
+    st.top()--
+
+pos
+    st.top()=+st.top()
+
+neg
+    st.top()=-st.top()
+
+bnot
+    st.top()=~st.top()
+
+lnot
+    st.top()=!st.top()
+
+typeof
+    st.top()=typeof st.top()
+
+mul
+div
+mod
+add
+sub
+band
+xor
+bor
+land
+lor
+shl
+shr
+less
+gt
+le
+ge
+eq
+ieq
+    b=st.pop()
+    a=st.pop()
+    st.push(a X b)
+
+istrue a
+    if (st.pop()) skip(next_instruction);
+
+isfalse a
+    if (st.pop()) skip(next_instruction);
+
+addsp
+    sp+=st.pop()
+
+subsp
+    sp-=st.pop()
+
+call argc
+    st.pop()(...)
+
+ret
+    reg_rv=st.pop()
+    return
+
+halt
+    halt
+*/
 #define OP_CODE(T) \
-T(NEW_ARRAY,1)\
-T(NEW_OBJECT,1)\
-T(SET_THIS,1)\
-T(OBJECT_GET,2)\
-T(OBJECT_SET,2)\
-T(OBJECT_RESET,1)\
-T(ARRAY_PUSH,1)\
-T(GET_GLOBAL,2)\
-T(SET_GLOBAL,2)\
-T(SWAP,2)\
-T(NLOAD,1)\
-T(BLOAD,2)\
-T(ILOAD,2)\
-T(FLOAD,2)\
-T(SLOAD,2)\
-T(MOV,2)\
-T(CALL,2)\
-T(RET,1)\
-T(GRV,1)\
-T(JMP,1)\
-T(POS,1)\
-T(NEG,1)\
-T(BNOT,1)\
-T(LNOT,1)\
-T(TYPEOF,1)\
-T(INC,1)\
-T(DEC,1)\
-T(MUL,2)\
-T(DIV,2)\
-T(MOD,2)\
-T(ADD,2)\
-T(SUB,2)\
-T(BAND,2)\
-T(XOR,2)\
-T(BOR,2)\
-T(LAND,2)\
-T(LOR,2)\
-T(SHL,2)\
-T(SHR,2)\
-T(LESS,2)\
-T(GT,2)\
-T(LE,2)\
-T(GE,2)\
-T(EQ,2)\
-T(IEQ,2)\
-T(ISTRUE,1)\
-T(ISFALSE,1)\
-T(HALT,2)\
+T(LOAD_GLOBAL)\
+T(STORE_GLOBAL)\
+T(LOAD)\
+T(STORE)\
+T(NPUSH)\
+T(BPUSH)\
+T(IPUSH)\
+T(FPUSH)\
+T(SPUSH)\
+T(POP)\
+T(NEW_ARRAY)\
+T(NEW_OBJECT)\
+T(SET_THIS)\
+T(ARRAY_PUSH)\
+T(OBJECT_GET)\
+T(OBJECT_SET)\
+T(OBJECT_RESET)\
+T(DUP)\
+T(SWAP)\
+T(INC)\
+T(DEC)\
+T(POS)\
+T(NEG)\
+T(BNOT)\
+T(LNOT)\
+T(TYPEOF)\
+T(MUL)\
+T(DIV)\
+T(MOD)\
+T(ADD)\
+T(SUB)\
+T(BAND)\
+T(XOR)\
+T(BOR)\
+T(LAND)\
+T(LOR)\
+T(SHL)\
+T(SHR)\
+T(LESS)\
+T(GT)\
+T(LE)\
+T(GE)\
+T(EQ)\
+T(IEQ)\
+T(ISTRUE)\
+T(ISFALSE)\
+T(ADDSP)\
+T(SUBSP)\
+T(CALL)\
+T(RET)\
+T(HALT)\
 
 
 #define GET_OP_NAME(NAME,LENGTH) OP_##NAME,
