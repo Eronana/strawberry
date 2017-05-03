@@ -155,30 +155,24 @@ halt
 */
 
 template<typename T>
-void variantMethod(Symbol *symbol,T &identifier,int reg,bool isGet)
+void variantMethod(Symbol *symbol,T &identifier,const char *method)
 {
     string &id=GET_LITERAL(identifier).raw;
     int allowIndex=symbol->lookup(id);
     if(Symbol::isGlobal(allowIndex))
-    {
-        if(isGet)PRINTF("get_global %d,%d\n",reg,Symbol::getGlobalIndex(allowIndex));
-        else PRINTF("set_global %d,%d\n",Symbol::getGlobalIndex(allowIndex),reg);
-    }
+        PRINTF("%s_global %d\n",method,Symbol::getGlobalIndex(allowIndex));
     else
-    {
-        if(isGet)PRINTF("mov %d,%d\n",reg,allowIndex);
-        else PRINTF("mov %d,%d\n",allowIndex,reg);
-    }
+        PRINTF("%s %d\n",method,allowIndex);
 }
 template<typename T>
-void setVariant(Symbol *symbol,T &identifier,int reg)
+void storeVariant(Symbol *symbol,T &identifier)
 {
-    variantMethod(symbol,identifier,reg,false);
+    variantMethod(symbol,identifier,"store");
 }
 template<typename T>
-void getVariant(Symbol *symbol,T &identifier,int reg)
+void loadVariant(Symbol *symbol,T &identifier)
 {
-    variantMethod(symbol,identifier,reg,true);
+    variantMethod(symbol,identifier,"load");
 }
 bool is_identifier(const unique_ptr<AST> &expr)
 {
@@ -193,59 +187,53 @@ DEF_AST_METHOD(Literal,AST_CODEGEN)
     if(token.type==TOKEN_IDENTIFIER)
     {
         AST_PTR tmp(this);
-        getVariant(symbol,tmp,sp);
+        loadVariant(symbol,tmp);
         tmp.release();
     }
     
-    else PRINTF("load %d,%s\n",sp,token.raw.c_str());
+    else PRINTF("push %s\n",token.raw.c_str());
 }
 DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
 {
-    PRINTF("new_array %d\n",sp);
-    int sp_bak=sp++,this_bak=++this_count;
+    PRINTF("new_array\n");
+    int this_bak=++this_count;
     FOREACH(nodes)
     {
         CODEGEN(x);
         if(this_bak!=this_count)
         {
-            PRINTF("set_this %d\n",sp_bak);
+            PRINTF("set_this\n");
             this_bak=++this_count;
         }
-        PRINTF("array_push %d\n",sp);
+        PRINTF("array_push\n");
     }
-    sp=sp_bak;
 }
 
 DEF_AST_METHOD(ObjectLiteral,AST_CODEGEN)
 {
-    PRINTF("new_object %d\n",sp);
-    int sp_bak=sp++,this_bak=++this_count;
-    int value_sp=sp,key_sp=sp+1;
+    PRINTF("new_object\n");
+    int this_bak=++this_count;
     for(auto &x:nodes)
     {
         auto property=(AST_NAME(PropertyNameAndValue)*)x.get();
         CODEGEN(property->assignExpr);
         if(this_bak!=this_count)
         {
-            PRINTF("set_this %d\n",sp_bak);
+            PRINTF("set_this\n");
             this_bak=++this_count;
         }
-        PRINTF("load %d,%s\n",key_sp,GET_LITERAL(property->identifier).raw.c_str());
-        PRINTF("object_set %d,%d\n",key_sp,value_sp);
+        PRINTF("push %s\n",GET_LITERAL(property->identifier).raw.c_str());
+        PRINTF("object_set\n");
     }
-    sp=sp_bak;
 }
 DEF_AST_METHOD(Expression,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
 {
-    for(int i=nodes.size()-1;~i;i--,sp++)
+    for(int i=nodes.size()-1;~i;i--)
     {
         PRINTF("; arugment %d\n",i);
         CODEGEN(nodes[i]);
     }
-    PRINTF("call %d,%lu\n",sp,nodes.size());
-    sp-=nodes.size();
-    PRINTF("grv %d\n",sp-1);
 }
 
 DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
@@ -272,13 +260,13 @@ DEF_AST_METHOD(PropertyNameAndValue,AST_CODEGEN) {}
 DEF_AST_METHOD(MemberPartExpression,AST_CODEGEN)
 {
     CODEGEN(expr);
-    PRINTF("object_get %d,%d\n",sp,sp);
+    PRINTF("object_get\n");
 }
 
 DEF_AST_METHOD(MemberPartIdentifer,AST_CODEGEN)
 {
-    PRINTF("load %d,\"%s\"\n",sp,GET_LITERAL(identifer).raw.c_str());
-    PRINTF("object_get %d,%d\n",sp,sp);
+    PRINTF("push \"%s\"\n",GET_LITERAL(identifer).raw.c_str());
+    PRINTF("object_get\n");
 }
 
 DEF_AST_METHOD(MemberExpression,AST_CODEGEN)
@@ -291,7 +279,7 @@ DEF_AST_METHOD(MemberExpressionPartList,AST_CODEGEN)
 {
     FOREACH(nodes)
     {
-        PRINTF("set_this %d\n",sp);
+        PRINTF("set_this\n");
         this_count++;
         CODEGEN(x);
     }
@@ -299,59 +287,58 @@ DEF_AST_METHOD(MemberExpressionPartList,AST_CODEGEN)
 
 DEF_AST_METHOD(CallExpression,AST_CODEGEN)
 {
-    CODEGEN(expr);
-    sp++;
     CODEGEN(arguments);
-    sp--;
+    CODEGEN(expr);
+    int argc=((AST_NAME(ArgumentList)*)arguments.get())->nodes.size();
+    PRINTF("call %d\n",argc);
     if(exprPart)CODEGEN(exprPart);
 }
 
 DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
 {
     bool isIdentifier=is_identifier(expr);
-    if(isIdentifier)getVariant(symbol,expr,sp);
+    if(isIdentifier)loadVariant(symbol,expr);
     else CODEGEN(expr);
-    PRINTF("mov %d,%d\n",sp+1,sp);
-    if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc");
-    else PRINTF("dec");
-    PRINTF(" %d\n",sp+1);
-    if(isIdentifier)setVariant(symbol,expr,sp+1);
-    else PRINTF("object_reset %d\n",sp+1);
+    PRINTF("dup\n");
+    if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc\n");
+    else PRINTF("dec\n");
+    if(isIdentifier)storeVariant(symbol,expr);
+    else PRINTF("object_reset\n");
 }
 
 
 DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 {
     bool isIdentifier=is_identifier(expr);
-    if(isIdentifier)getVariant(symbol,expr,sp);
+    if(isIdentifier)loadVariant(symbol,expr);
     else CODEGEN(expr);
 
     if(GET_LITERAL(optr).type==TOKEN_INCREMENT||GET_LITERAL(optr).type==TOKEN_DECREMENT)
     {
-        if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc");
-        else PRINTF("dec");
-        PRINTF(" %d\n",sp);
-        if(isIdentifier)setVariant(symbol,expr,sp);
-        else PRINTF("object_reset %d\n",sp);
+        if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc\n");
+        else PRINTF("dec\n");
+        PRINTF("dup\n");
+        if(isIdentifier)storeVariant(symbol,expr);
+        else PRINTF("object_reset\n");
         return;
     }
 
     switch(GET_LITERAL(optr).type)
     {
         case TOKEN_ADD:
-            PRINTF("pos %d\n",sp);
+            PRINTF("pos\n");
             break;
         case TOKEN_SUB:
-            PRINTF("neg %d\n",sp);
+            PRINTF("neg\n");
             break;
         case TOKEN_BITWISE_NOT:
-            PRINTF("bnot %d\n",sp);
+            PRINTF("bnot\n");
             break;
         case TOKEN_NEGATION:
-            PRINTF("lnot %d\n",sp);
+            PRINTF("lnot\n");
             break;
         default:
-            PRINTF("typeof %d\n",sp);
+            PRINTF("typeof\n");
             break;
     }
 }
@@ -359,63 +346,63 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
 {
     bool isIdentifier=is_identifier(expr);
-    if(isIdentifier)getVariant(symbol,expr,sp);
+    if(isIdentifier)loadVariant(symbol,expr);
     else CODEGEN(expr);
     switch(GET_LITERAL(optr).type)
     {
         case TOKEN_MUL:
-            PRINTF("mul %d,%d\n",sp-1,sp);
+            PRINTF("mul\n");
             break;
         case TOKEN_DIV:
-            PRINTF("div %d,%d\n",sp-1,sp);
+            PRINTF("div\n");
             break;
         case TOKEN_MOD:
-            PRINTF("mod %d,%d\n",sp-1,sp);
+            PRINTF("mod\n");
             break;
         case TOKEN_ADD:
-            PRINTF("add %d,%d\n",sp-1,sp);
+            PRINTF("add\n");
             break;
         case TOKEN_SUB:
-            PRINTF("sub %d,%d\n",sp-1,sp);
+            PRINTF("sub\n");
             break;
         case TOKEN_BITWISE_AND:
-            PRINTF("band %d,%d\n",sp-1,sp);
+            PRINTF("band\n");
             break;
         case TOKEN_BITWISE_XOR:
-            PRINTF("xor %d,%d\n",sp-1,sp);
+            PRINTF("xor\n");
             break;
         case TOKEN_BITWISE_OR:
-            PRINTF("bor %d,%d\n",sp-1,sp);
+            PRINTF("bor\n");
             break;
         case TOKEN_LOGIC_AND:
-            PRINTF("land %d,%d\n",sp-1,sp);
+            PRINTF("land\n");
             break;
         case TOKEN_LOGIC_OR:
-            PRINTF("lor %d,%d\n",sp-1,sp);
+            PRINTF("lor\n");
             break;
         case TOKEN_LEFT_SHIFT:
-            PRINTF("shl %d,%d\n",sp-1,sp);
+            PRINTF("shl\n");
             break;
         case TOKEN_RIGHT_SHIFT:
-            PRINTF("shr %d,%d\n",sp-1,sp);
+            PRINTF("shr\n");
             break;
         case TOKEN_LESS:
-            PRINTF("less %d,%d\n",sp-1,sp);
+            PRINTF("less\n");
             break;
         case TOKEN_GREATER:
-            PRINTF("gt %d,%d\n",sp-1,sp);
+            PRINTF("gt\n");
             break;
         case TOKEN_LESS_EQUAL:
-            PRINTF("le %d,%d\n",sp-1,sp);
+            PRINTF("le\n");
             break;
         case TOKEN_GREATER_EQUAL:
-            PRINTF("ge %d,%d\n",sp-1,sp);
+            PRINTF("ge\n");
             break;
         case TOKEN_EQUAL:
-            PRINTF("eq %d,%d\n",sp-1,sp);
+            PRINTF("eq\n");
             break;
         case TOKEN_INEQUAL:
-            PRINTF("ieq %d,%d\n",sp-1,sp);
+            PRINTF("ieq\n");
             break;
     }
 }
@@ -423,16 +410,14 @@ DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
 DEF_AST_METHOD(BinaryExpression,AST_CODEGEN)
 {
     CODEGEN(expr);
-    sp++;
     CODEGEN(operations);
-    sp--;
 }
 
 DEF_AST_METHOD(ConditionalExpression,AST_CODEGEN)
 {
     PRINTF("; conditional expression\n");
     CODEGEN(expr);
-    PRINTF("istrue %d\n",sp);
+    PRINTF("istrue\n");
     int falseLabel=nextLabel();
     int jmpLabel=nextLabel();
     PRINTF("jmp label_%d\n",falseLabel);
@@ -452,65 +437,63 @@ DEF_AST_METHOD(AssignmentExpression,AST_CODEGEN)
     if(isIdentifier&&GET_LITERAL(assignOptr).type==TOKEN_ASSIGN)
     {
         CODEGEN(assignExpr);
-        setVariant(symbol,expr,sp);
+        storeVariant(symbol,expr);
         return;
     }
     CODEGEN(assignExpr);
-    sp++;
     CODEGEN(expr);
-    sp--;
-    int a_sp=sp,b_sp=sp+1;
-    PRINTF("swap %d,%d\n",a_sp,b_sp);
+    PRINTF("swap\n");
     switch(GET_LITERAL(assignOptr).type)
     {
         case TOKEN_ASSIGN:
-            PRINTF("mov %d,%d\n",a_sp,b_sp);
+            PRINTF("mov\n");
             break;
         case TOKEN_MUL_ASSIGN:
-            PRINTF("mul %d,%d\n",a_sp,b_sp);
+            PRINTF("mul\n");
             break;
         case TOKEN_DIV_ASSIGN:
-            PRINTF("div %d,%d\n",a_sp,b_sp);
+            PRINTF("div\n");
             break;
         case TOKEN_MOD_ASSIGN:
-            PRINTF("mod %d,%d\n",a_sp,b_sp);
+            PRINTF("mod\n");
             break;
         case TOKEN_ADD_ASSIGN:
-            PRINTF("add %d,%d\n",a_sp,b_sp);
+            PRINTF("add\n");
             break;
         case TOKEN_SUB_ASSIGN:
-            PRINTF("sub %d,%d\n",a_sp,b_sp);
+            PRINTF("sub\n");
             break;
         case TOKEN_LEFT_SHIFT_ASSIGN:
-            PRINTF("shl %d,%d\n",a_sp,b_sp);
+            PRINTF("shl\n");
             break;
         case TOKEN_RIGHT_SHIFT_ASSIGN:
-            PRINTF("shr %d,%d\n",a_sp,b_sp);
+            PRINTF("shr\n");
             break;
         case TOKEN_BITWISE_AND_ASSIGN:
-            PRINTF("and %d,%d\n",a_sp,b_sp);
+            PRINTF("and\n");
             break;
         case TOKEN_BITWISE_XOR_ASSIGN:
-            PRINTF("xor %d,%d\n",a_sp,b_sp);
+            PRINTF("xor\n");
             break;
         case TOKEN_BITWISE_OR_ASSIGN:
-            PRINTF("or %d,%d\n",a_sp,b_sp);
+            PRINTF("or\n");
             break;
     }
-    if(isIdentifier)setVariant(symbol,expr,sp);
-    else PRINTF("object_reset %d\n",sp);
+    if(isIdentifier)storeVariant(symbol,expr);
+    else PRINTF("object_reset\n");
 }
 
 DEF_AST_METHOD(ExpressionStatement,AST_CODEGEN)
 {
     CODEGEN(expr);
+    PRINTF("pop\n");
 }
 
 DEF_AST_METHOD(IfStatement,AST_CODEGEN)
 {
     PRINTF("; if statement\n");
     CODEGEN(expr);
-    PRINTF("istrue %d\n",sp);
+    PRINTF("istrue\n");
     int jmpLabel=nextLabel();
     int elseLabel;
     if(elseStatement)elseLabel=nextLabel();
@@ -532,7 +515,7 @@ DEF_AST_METHOD(VariableDeclaration,AST_CODEGEN)
 {
     if(!assignExpr)return;
     CODEGEN(assignExpr);
-    setVariant(symbol,identifier,sp);
+    storeVariant(symbol,identifier);
 }
 
 DEF_AST_METHOD(ForStatement,AST_CODEGEN)
@@ -549,7 +532,7 @@ DEF_AST_METHOD(ForStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",beginLabel);
     PRINTF("; check expression\n");
     CODEGEN(expr);
-    PRINTF("istrue %d\n",sp);
+    PRINTF("istrue\n");
     PRINTF("jmp label_%d\n",endLabel);
     PRINTF("; statement\n");
     CODEGEN(statement);
@@ -577,7 +560,7 @@ DEF_AST_METHOD(DoStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",continueLabel);
     PRINTF("; check expression\n");
     CODEGEN(expr);
-    PRINTF("isfalse %d\n",sp);
+    PRINTF("isfalse\n");
     PRINTF("jmp label_%d\n",beginLabel);
     PRINTF("label_%d:\n",endLabel);
     continueStack.pop();
@@ -595,7 +578,7 @@ DEF_AST_METHOD(WhileStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",beginLabel);
     PRINTF("; check expression\n");
     CODEGEN(expr);
-    PRINTF("istrue %d\n",sp);
+    PRINTF("istrue\n");
     PRINTF("jmp label_%d\n",endLabel);
     PRINTF("; statement\n");
     CODEGEN(statement);
@@ -612,8 +595,8 @@ DEF_AST_METHOD(CaseClause,AST_CODEGEN)
     if(expr)
     {
         CODEGEN(expr);
-        PRINTF("eq %d,%d\n",sp,sp-1);
-        PRINTF("istrue %d\n",sp);
+        PRINTF("eq\n");
+        PRINTF("istrue\n");
         PRINTF("jmp label_%d\n",nextCaluse);
         // hack for default caluse
         if(nextCaluse-1==defaultClauseStack.top())PRINTF("label_%d:\n",nextLabel());
@@ -649,23 +632,21 @@ DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
     GET_SCOPE();
     PRINTF("; switch statement\n");
     CODEGEN(expr);
-    sp++;
     CODEGEN(caseBlock);
-    sp--;
 }
 DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {
     GET_SCOPE();
-    sp+=symbol->localCount;
-    //PRINTF("[FUNCTION]\n");
-    sp-=symbol->localCount;
+    PRINTF("; function expression\n");
+    PRINTF("addsp %d\n",symbol->localCount);
+    PRINTF("subsp %d\n",symbol->localCount);
 }
 
 DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
 {
     if(expr)CODEGEN(expr);
-    else PRINTF("load %d,null\n",sp);
-    PRINTF("ret %d\n",sp);
+    else PRINTF("load null\n");
+    PRINTF("ret\n");
 }
 
 
@@ -684,7 +665,7 @@ DEF_AST_METHOD(EmptyStatement,AST_CODEGEN){}
 DEF_AST_METHOD(Program,AST_CODEGEN)
 {
     GET_SCOPE();
-    sp+=symbol->localCount;
+    PRINTF("addsp %d\n",symbol->localCount);
     CODEGEN(stmtList);
-    sp-=symbol->localCount;
+    PRINTF("subsp %d\n",symbol->localCount);
 }
