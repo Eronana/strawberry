@@ -8,10 +8,10 @@
 #define EXTENT_INT(a,N) ((a)|(~((((a)&(1<<(N-1)))<<1)-1)))
 #define DEF_FUNC(NAME) void VirtualMachine::GET_FUNC_NAME(NAME)()
 #define CUR_INS code_data.code_raw[ip]
-#define GET_A() int a=get_A(CUR_INS);V_VALUE &A=l_stack[a];
-#define GET_AB() int a=get_a(CUR_INS),b=get_b(CUR_INS);V_VALUE &A=l_stack[a],&B=l_stack[b];
-
-
+#define NEXT_INS code_data.code_raw[next_ip]
+#define CUR_INS_LEN op_length[CUR_INS]
+#define SKIP_INS next_ip+=op_length[NEXT_INS]
+#define KEEP_INS next_ip=ip
 const char *type_name[]={
     "null",
     "bool",
@@ -23,326 +23,349 @@ const char *type_name[]={
     "native function",
     "function"
 };
-
-OPCODE get_ins(CODE code)
+int8_t VirtualMachine::get_int8()
 {
-    return (OPCODE)(code>>26);
+    return (int8_t)code_data.code_raw[ip+1];
+}
+int16_t VirtualMachine::get_int16()
+{
+    return *(int16_t*)&code_data.code_raw[ip+1];
+}
+int32_t VirtualMachine::get_int32()
+{
+    return *(int32_t*)&code_data.code_raw[ip+1];
 }
 
-int get_A(CODE code)
+#define STOP v_stack.top()
+#define SPOP v_stack.pop()
+
+
+DEF_FUNC(LOAD_GLOBAL)
 {
-    return EXTENT_INT(code&0x3ffffff,26);
+    v_stack.push(v_stack[get_int32()]);
 }
 
-int get_a(CODE code)
+
+DEF_FUNC(STORE_GLOBAL)
 {
-    return EXTENT_INT((code&0x3ffffff)>>13,13);
+    v_stack[get_int32()]=STOP;
 }
 
-int get_b(CODE code)
+DEF_FUNC(LOAD)
 {
-    return EXTENT_INT(code&0x1fff,13);
+    v_stack.push(v_stack[get_int32()+l_stack]);
 }
+    
+DEF_FUNC(STORE)
+{
+    v_stack[get_int32()+l_stack]=STOP;
+}
+
+DEF_FUNC(NPUSH)
+{
+    v_stack.add();
+    STOP.setNull();
+}
+
+
+DEF_FUNC(BPUSH)
+{
+    STOP.type=T_BOOL;
+    STOP.v_bool=get_int8();
+}
+
+DEF_FUNC(IPUSH)
+{
+    v_stack.add();
+    STOP.type=T_INT;
+    STOP.v_int=code_data.int_table[get_int32()];
+}
+
+DEF_FUNC(FPUSH)
+{
+    v_stack.add();
+    STOP.type=T_FLOAT;
+    STOP.v_float=code_data.float_table[get_int32()];
+}
+
+DEF_FUNC(SPUSH)
+{
+    v_stack.add();
+    STOP.type=T_STRING;
+    STOP.v_string=NEW(STRING_OTYPE);
+    *STOP.v_string=code_data.string_table[get_int32()];
+}
+
+DEF_FUNC(POP)
+{
+    v_stack.sub();
+}
+
 
 DEF_FUNC(NEW_ARRAY)
 {
-    GET_A();
-    A.type=T_ARRAY;
-    A.v_array=NEW(ARRAY_OTYPE);
-    reg_this=A;
+    v_stack.add();
+    STOP.type=T_ARRAY;
+    STOP.v_array=NEW(ARRAY_OTYPE);
+    reg_this=STOP;
 }
 
 DEF_FUNC(NEW_OBJECT)
 {
-    GET_A();
-    A.type=T_OBJECT;
-    A.v_object=NEW(OBJECT_OTYPE);
-    reg_this=A;
+    v_stack.add();
+    STOP.type=T_OBJECT;
+    STOP.v_object=NEW(OBJECT_OTYPE);
+    reg_this=STOP;
 }
 
 DEF_FUNC(SET_THIS)
 {
-    GET_A();
-    reg_this=A;
+    reg_this=SPOP;
+}
+
+DEF_FUNC(RESET_THIS)
+{
+    reg_this=v_stack.top(1);
+}
+
+DEF_FUNC(ARRAY_PUSH)
+{
+    reg_this.v_array->push_back(SPOP);
 }
 
 DEF_FUNC(OBJECT_GET)
 {
-    GET_AB();
     if(reg_this.type==T_OBJECT)
     {
         array_last_index=-1;
-        A=(*reg_this.v_object)[object_last_key=B.toString()];
+        object_last_key=STOP.toString();
+        STOP=(*reg_this.v_object)[object_last_key];
     }
     else if(reg_this.type==T_ARRAY)
     {
-        A=(*reg_this.v_array)[array_last_index=B.toInt()];
+        array_last_index=STOP.toInt();
+        STOP=(*reg_this.v_array)[array_last_index];
     }
 }
 
 DEF_FUNC(OBJECT_SET)
 {
-    GET_AB();
-    if(reg_this.type==T_OBJECT)(*reg_this.v_object)[A.toString()]=B;
-    else if(reg_this.type==T_ARRAY)(*reg_this.v_array)[A.toInt()]=B;
+    if(reg_this.type==T_OBJECT)
+    {
+        string key=SPOP.toString();
+        (*reg_this.v_object)[key]=STOP;
+    }
+    
+    else if(reg_this.type==T_ARRAY)
+    {
+        int key=SPOP.toInt();
+        (*reg_this.v_array)[key]=STOP;
+    }
 }
 
 DEF_FUNC(OBJECT_RESET)
 {
-    GET_A();
-    if(array_last_index!=-1)(*reg_this.v_array)[array_last_index]=A;
-    else(*reg_this.v_object)[object_last_key]=A;
+    if(array_last_index!=-1)(*reg_this.v_array)[array_last_index]=STOP;
+    else(*reg_this.v_object)[object_last_key]=STOP;
 }
 
-DEF_FUNC(ARRAY_PUSH)
-{
-    GET_A();
-    reg_this.v_array->push_back(A);
-}
 
-DEF_FUNC(GET_GLOBAL)
+DEF_FUNC(DUP)
 {
-    GET_AB();
-    A=v_stack[b];
-}
-
-DEF_FUNC(SET_GLOBAL)
-{
-    GET_AB();
-    v_stack[a]=B;
+    v_stack.push(STOP);
 }
 
 DEF_FUNC(SWAP)
 {
-    GET_AB();
-    swap(A,B);
+    swap(STOP,v_stack.top(1));
 }
 
-DEF_FUNC(NLOAD)
+DEF_FUNC(INC)
 {
-    GET_A();
-    A.setNull();
+    ++STOP;
 }
 
-DEF_FUNC(BLOAD)
+DEF_FUNC(DEC)
 {
-    GET_AB();
-    A.type=T_BOOL;
-    A.v_bool=code_data.int_table[b];
+    --STOP;
 }
 
-DEF_FUNC(ILOAD)
+DEF_FUNC(POS)
 {
-    GET_AB();
-    A.type=T_INT;
-    A.v_int=code_data.int_table[b];
+    STOP.positive();
 }
 
-DEF_FUNC(FLOAD)
+DEF_FUNC(NEG)
 {
-    GET_AB();
-    A.type=T_FLOAT;
-    A.v_float=code_data.float_table[b];
+    STOP.negative();
 }
 
-DEF_FUNC(SLOAD)
+DEF_FUNC(BNOT)
 {
-    GET_AB();
-    A.type=T_STRING;
-    A.v_string=NEW(STRING_OTYPE);
-    *A.v_string=code_data.string_table[b];
+    STOP.bnot();
 }
 
-DEF_FUNC(MOV)
+DEF_FUNC(LNOT)
 {
-    GET_AB();
-    A=B;
+    STOP.lnot();
 }
 
+DEF_FUNC(TYPEOF)
+{
+    STOP.v_string=NEW(STRING_OTYPE);
+    *STOP.v_string=type_name[STOP.type];
+    STOP.type=T_STRING;
+}
+
+DEF_FUNC(MUL)
+{
+    auto a=SPOP;
+    STOP*=a;
+}
+DEF_FUNC(DIV)
+{
+    auto a=SPOP;
+    STOP/=a;
+}
+DEF_FUNC(MOD)
+{
+    auto a=SPOP;
+    STOP%=a;
+}
+DEF_FUNC(ADD)
+{
+    auto a=SPOP;
+    STOP+=a;
+}
+DEF_FUNC(SUB)
+{
+    auto a=SPOP;
+    STOP-=a;
+}
+DEF_FUNC(BAND)
+{
+    auto a=SPOP;
+    STOP&=a;
+}
+DEF_FUNC(XOR)
+{
+    auto a=SPOP;
+    STOP^=a;
+}
+DEF_FUNC(BOR)
+{
+    auto a=SPOP;
+    STOP|=a;
+}
+DEF_FUNC(LAND)
+{
+    auto a=SPOP;
+    STOP.land(a);
+}
+DEF_FUNC(LOR)
+{
+    auto a=SPOP;
+    STOP.lor(a);
+}
+DEF_FUNC(SHL)
+{
+    auto a=SPOP;
+    STOP<<=a;
+}
+DEF_FUNC(SHR)
+{
+    auto a=SPOP;
+    STOP>>=a;
+}
+
+DEF_FUNC(LESS)
+{
+    auto a=SPOP;
+    STOP.setBool(STOP<a);
+}
+DEF_FUNC(GT)
+{
+    auto a=SPOP;
+    STOP.setBool(STOP>a);
+}
+DEF_FUNC(LE)
+{
+    auto a=SPOP;
+    STOP.setBool(STOP<=a);
+}
+DEF_FUNC(GE)
+{
+    auto a=SPOP;
+    STOP.setBool(STOP>=a);
+}
+DEF_FUNC(EQ)
+{
+    auto a=SPOP;
+    STOP.setBool(STOP==a);
+}
+DEF_FUNC(IEQ)
+{
+    auto a=SPOP;
+    STOP.setBool(STOP!=a);
+}
+DEF_FUNC(ISTRUE)
+{
+    if(SPOP)SKIP_INS;
+}
+DEF_FUNC(ISFALSE)
+{
+    if(!SPOP)SKIP_INS;
+}
+
+DEF_FUNC(ADDSP)
+{
+    v_stack.add(get_int32());
+}
+
+DEF_FUNC(SUBSP)
+{
+    v_stack.sub(get_int32());
+}
+
+
+DEF_FUNC(JMP)
+{
+    ip=get_int32();
+    KEEP_INS;
+}
 DEF_FUNC(CALL)
 {
-    GET_AB();
-    V_VALUE &func=l_stack[a-b-1];
+    int8_t argc=get_int8();
+    V_VALUE func=SPOP;
     if(func.type==T_FUNCTION)
     {
-        stack_frame.push({a,ip});
-        l_stack+=a;
-        ip=func.v_function-1;
+        stack_frame.push({l_stack,argc,ip});
+        l_stack=v_stack.size();
+        ip=func.v_function;
+        KEEP_INS;
     }
     else if(func.type==T_NATIVE_FUNCTION)
     {
         reg_ret.setNull();
-        func.v_native_function(b,l_stack+a,reg_ret);
+        auto size=v_stack.size();
+        func.v_native_function(argc,v_stack,reg_ret);
+        v_stack.resize(size);
+        v_stack.sub(argc-1);
+        STOP=reg_ret;
     }
 }
 
 DEF_FUNC(RET)
 {
-    GET_A();
-    reg_ret=A;
-    l_stack-=stack_frame.top().sp;
-    ip=stack_frame.top().ip-1;
+    l_stack=stack_frame.top().sp;
+    ip=stack_frame.top().ip;
+    KEEP_INS;
+    reg_ret=SPOP;
+    v_stack.sub(stack_frame.top().argc-1);
+    STOP=reg_ret;
     stack_frame.pop();
 }
 
-DEF_FUNC(GRV)
-{
-    GET_A();
-    A=reg_ret;
-}
-
-DEF_FUNC(JMP)
-{
-    GET_A();
-    ip=a-1;
-}
-
-DEF_FUNC(POS)
-{
-    GET_A();
-    A.positive();
-}
-
-DEF_FUNC(NEG)
-{
-    GET_A();
-    A.negative();
-}
-
-DEF_FUNC(BNOT)
-{
-    GET_A();
-    A.bnot();
-}
-
-DEF_FUNC(LNOT)
-{
-    GET_A();
-    A.lnot();
-}
-
-DEF_FUNC(TYPEOF)
-{
-    GET_A();
-    A.v_string=NEW(STRING_OTYPE);
-    *A.v_string=type_name[A.type];
-    A.type=T_STRING;
-}
-
-DEF_FUNC(INC)
-{
-    GET_A();
-    ++A;
-}
-
-DEF_FUNC(DEC)
-{
-    GET_A();
-    --A;
-}
-
-DEF_FUNC(MUL)
-{
-    GET_AB();
-    A*=B;
-}
-DEF_FUNC(DIV)
-{
-    GET_AB();
-    A/=B;
-}
-DEF_FUNC(MOD)
-{
-    GET_AB();
-    A%=B;
-}
-DEF_FUNC(ADD)
-{
-    GET_AB();
-    A+=B;
-}
-DEF_FUNC(SUB)
-{
-    GET_AB();
-    A-=B;
-}
-DEF_FUNC(BAND)
-{
-    GET_AB();
-    A&=B;
-}
-DEF_FUNC(XOR)
-{
-    GET_AB();
-    A^=B;
-}
-DEF_FUNC(BOR)
-{
-    GET_AB();
-    A|=B;
-}
-DEF_FUNC(LAND)
-{
-    GET_AB();
-    A.land(B);
-}
-DEF_FUNC(LOR)
-{
-    GET_AB();
-    A.lor(B);
-}
-DEF_FUNC(SHL)
-{
-    GET_AB();
-    A<<=B;
-}
-DEF_FUNC(SHR)
-{
-    GET_AB();
-    A>>=B;
-}
-
-DEF_FUNC(LESS)
-{
-    GET_AB();
-    A.setBool(A<B);
-}
-DEF_FUNC(GT)
-{
-    GET_AB();
-    A.setBool(A>B);
-}
-DEF_FUNC(LE)
-{
-    GET_AB();
-    //printf("%d<=%d\n",A.toInt(),B.toInt());
-    A.setBool(A<=B);
-}
-DEF_FUNC(GE)
-{
-    GET_AB();
-    A.setBool(A>=B);
-}
-DEF_FUNC(EQ)
-{
-    GET_AB();
-    A.setBool(A==B);
-}
-DEF_FUNC(IEQ)
-{
-    GET_AB();
-    A.setBool(A!=B);
-}
-DEF_FUNC(ISTRUE)
-{
-    GET_A();
-    if(A)ip++;
-}
-DEF_FUNC(ISFALSE)
-{
-    GET_A();
-    if(!A)ip++;
-}
 DEF_FUNC(HALT)
 {
     // nothing to do
@@ -356,25 +379,31 @@ VirtualMachine::VirtualMachine()
 bool VirtualMachine::load(const char *filename)
 {
     if(!code_data.load(filename))return false;
-    v_stack=unique_ptr<V_VALUE[]>(l_stack=new V_VALUE[code_data.config.stack_size]);
-    v_stack[0].type=T_OBJECT;
-    v_stack[0].v_object=&reg_system;
+    l_stack=0;
+    v_stack.add();
+    STOP.type=T_OBJECT;
+    STOP.v_object=&reg_system;
     return true;
 }
 
 void VirtualMachine::run()
 {
     unsigned int t=clock();
-    for(ip=code_data.config.entry_point;ip>=0&&ip<code_data.config.code_raw_size;ip++)
+    for(ip=code_data.config.entry_point;
+        ip>=0&&ip<code_data.config.code_raw_size;
+        ip=next_ip)
     {
-        OPCODE ins=get_ins(CUR_INS);
-        //GET_AB();printf("[%x][%d:%d] ",CUR_INS,a,b);
         //discode(CUR_INS,code_data,stdout);
-        if(ins==OP_HALT)break;
-        if(ins>=0&&ins<=OP_HALT)(this->*op_func[ins])();
-        else printf("Unknow instructor: %d\n",ins);
+        //continue;
+        next_ip=ip+CUR_INS_LEN;
+        if(CUR_INS==OP_HALT)break;
+        if(CUR_INS>=0&&CUR_INS<=OP_HALT)(this->*op_func[CUR_INS])();
+        else printf("Unknow instructor: %d\n",CUR_INS);
+        //printf("STACK SIZE: %d\n",v_stack.size());
+        //puts("-----------------");
     }
     printf("halt in %lu clocks\n",clock()-t);
+    //printf("STACK SIZE: %d\n",v_stack.size());
 }
 
 void VirtualMachine::registerNativeFunction(const string &name,NATIVE_FUNCTION_TYPE func)

@@ -53,13 +53,12 @@ DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
         CODEGEN(x);
         if(this_bak!=this_count)
         {
-            PRINTF("set_this\n");
+            PRINTF("reset_this\n");
             this_bak=++this_count;
         }
         PRINTF("array_push\n");
     }
 }
-
 DEF_AST_METHOD(ObjectLiteral,AST_CODEGEN)
 {
     PRINTF("new_object\n");
@@ -70,14 +69,23 @@ DEF_AST_METHOD(ObjectLiteral,AST_CODEGEN)
         CODEGEN(property->assignExpr);
         if(this_bak!=this_count)
         {
-            PRINTF("set_this\n");
+            PRINTF("reset_this\n");
             this_bak=++this_count;
         }
         PRINTF("push %s\n",GET_LITERAL(property->identifier).raw.c_str());
         PRINTF("object_set\n");
+        PRINTF("pop\n");
     }
 }
-DEF_AST_METHOD(Expression,AST_CODEGEN) AST_CODEGEN_ARRAY()
+DEF_AST_METHOD(Expression,AST_CODEGEN)
+{
+    if(nodes.size())CODEGEN(nodes[0]);
+    FOR2ND(nodes)
+    {
+        PRINTF("pop\n");
+        CODEGEN(nodes[i]);
+    }
+}
 DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
 {
     for(int i=nodes.size()-1;~i;i--)
@@ -91,8 +99,13 @@ DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(CaseClauseList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(FormalParameterList,AST_CODEGEN) {}
 DEF_AST_METHOD(StatementList,AST_CODEGEN) AST_CODEGEN_ARRAY()
-DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(OperationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+
+DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) 
+{
+    AST_CODEGEN_ARRAY()
+    //PRINTF("pop\n");
+}
 
 
 DEF_AST_METHOD(Block,AST_CODEGEN)
@@ -150,7 +163,6 @@ DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
     bool isIdentifier=is_identifier(expr);
     if(isIdentifier)loadVariant(symbol,expr);
     else CODEGEN(expr);
-    PRINTF("dup\n");
     if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc\n");
     else PRINTF("dec\n");
     if(isIdentifier)storeVariant(symbol,expr);
@@ -168,7 +180,6 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
     {
         if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc\n");
         else PRINTF("dec\n");
-        PRINTF("dup\n");
         if(isIdentifier)storeVariant(symbol,expr);
         else PRINTF("object_reset\n");
         return;
@@ -367,6 +378,7 @@ DEF_AST_METHOD(VariableDeclaration,AST_CODEGEN)
     if(!assignExpr)return;
     CODEGEN(assignExpr);
     storeVariant(symbol,identifier);
+    PRINTF("pop\n");
 }
 
 DEF_AST_METHOD(ForStatement,AST_CODEGEN)
@@ -390,6 +402,7 @@ DEF_AST_METHOD(ForStatement,AST_CODEGEN)
     PRINTF("label_%d:\n",continueLabel);
     PRINTF("; loop expression\n");
     CODEGEN(loopExpr);
+    PRINTF("pop\n");
     PRINTF("jmp label_%d\n",beginLabel);
     PRINTF("label_%d:\n",endLabel);
     continueStack.pop();
@@ -484,6 +497,7 @@ DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
     PRINTF("; switch statement\n");
     CODEGEN(expr);
     CODEGEN(caseBlock);
+    PRINTF("pop\n");
 }
 DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {

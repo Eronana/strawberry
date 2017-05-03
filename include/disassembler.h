@@ -6,5 +6,5 @@
 #include "codedata.h"
 bool disassemble(const char *binfile,const char *outfile);
 bool disassemble(FILE *in,FILE *out);
-void discode(CODE code,CodeData &code_data,FILE *out);
+void discode(CODE &op,CodeData &code_data,FILE *out);
 #endif

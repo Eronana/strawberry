@@ -13,12 +13,12 @@ public:
         return *(data.rbegin()+n);
     }
 
-    void add(int n)
+    void add(int n=1)
     {
         data.resize(data.size()+n);
     }
 
-    void sub(int n)
+    void sub(int n=1)
     {
         data.resize(data.size()-n);
     }
@@ -43,6 +43,11 @@ public:
     size_t size()
     {
         return data.size();
+    }
+    
+    void resize(size_t size)
+    {
+        data.resize(size);
     }
 
     T &operator[](int idx)

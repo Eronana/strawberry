@@ -9,7 +9,10 @@ for(var i=0;i<haha;i++)
 {
     system.println(i*i);
 }
+
 println("来打印一个9*9乘法表");
+
+
 for(var i=1;i<=9;i++)
 {
     for(var j=1;j<=i;j++)
@@ -35,6 +38,7 @@ push(push(a),"fuck the world","膜蛤","魔法师","66666");
 if(push(a,"666"))for(var i=0;i<system.len(a);i++)println(a[i]);
 if(!push(1))println("不能push非树煮");
 
+
 var b={
     "string":"world",
     "int":1234f,
@@ -45,8 +49,10 @@ var b={
         "kotiri":2.3333
     }
 };
+
 var get_keys=system.get_keys;
 var keys=get_keys(b);
+
 for(var i=0;i<len(keys);i++)println(keys[i]);
 b.array[4].wtf[1][1]++;
 var bwtf=b.array[4].wtf[1];
@@ -56,12 +62,14 @@ println("asadgasd");
 
 print("请输入一个在[10,15]之间的整数\n");
 var tmp;
+
 while(!((tmp=scani())>=10&&tmp<=15))println("请输入一个在[10,15]之间的整数");
 println("我知道..用do写会更优雅一些...上面我只是为了测试while...");
 println("于是我用do再来一次");
 do println("请输入一个在[10,15]之间的整数");while(!((tmp=scani())>=10&&tmp<=15));
 if(1+1>2)println("1+1>2");
 else println("1+1不大于2");
+
 switch(scani())
 {
     default:
@@ -80,8 +88,9 @@ for(var i=2;i<1000;i++)
     for(j=2;j*j<=i;j++)if(i%j==0)break;
     if(j*j>i)print(i),print(" ");
 }
-println("");
+println("\nend");
 /*
+
 for(var i=0;i<4;i++)println(a[i]);
 var len;
 var each=function(a,f){

@@ -9,44 +9,37 @@
 #include <sstream>
 using namespace std;
 
-#define GET_NAME_MAP(NAME,LENGTH) {#NAME,GET_OP_NAME(NAME,LENGTH)},
+#define MAX_INT8 0x7f
+#define MIN_INT8 -0x80
+#define MAX_INT16 0x7fff
+#define MIN_INT16 -0x8000
+#define MAX_INT32 0x7fffffff
+#define MIN_INT32 -0x80000000
+
+#define GET_NAME_MAP(NAME,LEN) {#NAME,GET_OP_NAME(NAME,LEN)},
+const size_t op_length[]={OP_CODE(GET_OP_LENGTH)};
 char escape_table[128];
 
-const int OP_LOAD=0x12345678;
+const int OP_PUSH=0x12345678;
 map<string,int> opcode={
-    {"LOAD",OP_LOAD},
+    {"PUSH",OP_PUSH},
     OP_CODE(GET_NAME_MAP)
 };
 
-CODE gcode(OPCODE code)
-{
-    return code<<26;
-}
 
-CODE gcode(OPCODE code,int a)
-{
-    return gcode(code)|(a&0x3ffffff);
-}
-
-CODE gcode(OPCODE code,int a,int b)
-{
-    return gcode(code)|((a<<13)&0x3ffe000)|(b&0x1fff);
-}
-
-
-bool get_asm_line(ifstream &stream,string &s)
+int get_asm_line(ifstream &stream,string &s)
 {
     string str;
-    if(!getline(stream,str,'\n'))return false;
+    if(!getline(stream,str,'\n'))return 0;
     istringstream ss(str);
     getline(ss,s,';');
-    if(s.empty())return get_asm_line(stream,s);
+    if(s.empty())return 1+get_asm_line(stream,s);
     return true;
 }
 
 enum OPND_TYPE
 {
-    OT_INT,OT_NULL,OT_TRUE,OT_FALSE,OT_FLOAT,OT_STRING,OT_LABEL
+    OT_INT,OT_NULL,OT_BOOL,OT_FLOAT,OT_STRING,OT_LABEL
 };
 
 OPND_TYPE get_opnd_type(const string &s)
@@ -54,8 +47,8 @@ OPND_TYPE get_opnd_type(const string &s)
     char b=s[0],e=*s.rbegin();
     if((b=='"'&&e=='"')||(b=='\''&e=='\''))return OT_STRING;
     if(s=="NULL")return OT_NULL;
-    if(s=="TRUE")return OT_TRUE;
-    if(s=="FALSE")return OT_FALSE;
+    if(s=="TRUE")return OT_BOOL;
+    if(s=="FALSE")return OT_BOOL;
 
     OPND_TYPE t=OT_INT;
     for(int i=0;i<s.length();i++)if(!isdigit(s[i])&&(i&&s[0]!='-'))
@@ -76,15 +69,12 @@ OPND_TYPE get_opnd_type(const string &s)
 map<string,int> labels;
 map<string,int> string_table;
 map<FLOAT_TYPE,int> float_table;
-map<INT_TYPE,int> int_table={
-    {0,0},
-    {1,1}
-};
-
-vector<int> int_table_list={0,1};
+map<INT_TYPE,int> int_table;
+vector<int> int_table_list;
 vector<FLOAT_TYPE> float_table_list;
 vector<string> string_table_list;
-
+vector<pair<int,int>> jmp_table;
+map<int,int> op_pos;
 void init_escape_table()
 {
     if(escape_table[1])return;
@@ -114,6 +104,16 @@ bool get_opnd(const string &s,int &v)
     init_escape_table();
     switch(get_opnd_type(s))
     {
+        case OT_BOOL:
+            opnd_int=s[0]=='T'?1:0;
+            if(!int_table.count(opnd_int))
+            {
+                v=int_table.size();
+                int_table[opnd_int]=v;
+                int_table_list.push_back(opnd_int);
+            }
+            else v=int_table[opnd_int];
+            break;
         case OT_INT:
             opnd_int=atoi(s.c_str());
             if(!int_table.count(opnd_int))
@@ -172,130 +172,122 @@ struct S_CODE
 {
     int line;
     string oper;
-    vector<string> opnd;
+    string opnd;
 };
-void get_opnds(const string &s,vector<string> &opnd)
-{
-    for(int i=0;i<s.length();i++)if(s[i]!=' ')
-    {
-        int x=i;
-        if(s[i]=='"'||s[i]=='\'')
-        {
-            char c=s[i];
-            while(!(s[i++]!='\\'&&s[i]==c));
-            opnd.push_back(s.substr(x,i-x+1));
-        }
-        else
-        {
-            while(++i<s.length()&&s[i]!=',');
-            opnd.push_back(s.substr(x,i-x));
-            toUpperCase(*opnd.rbegin());
-        }
-    }
-}
+
 vector<S_CODE> s_code;
 bool load_asmfile(const char *filename)
 {
     ifstream asms(filename);
     if(!asms)return false;
     string line;
-    for(int lines=1;get_asm_line(asms,line);lines++)
+    for(int lines=0;;)
     {
+        int read_lines=get_asm_line(asms,line);
+        if(!read_lines)break;
+        lines+=read_lines;
         int pos=line.find(' ');
         string oper=line.substr(0,pos);
         toUpperCase(oper);
-        vector<string> opnd;
-        if(pos!=string::npos)get_opnds(line.substr(pos+1),opnd);
+        string opnd;
+        if(pos!=string::npos)
+        {
+            opnd=line.substr(pos+1);
+            if(opnd.length()&&opnd[0]!='\''&&opnd[0]!='"')toUpperCase(opnd);
+        }
         if(opnd.empty()&&*oper.rbegin()==':')
         {
             string label=string(oper,0,oper.size()-1);
             labels[toUpperCase(label)]=s_code.size();
         }
-        else s_code.push_back({lines,oper,opnd});
+        else
+        {
+            s_code.push_back({lines,oper,opnd});
+        }
     }
     asms.close();
     return true;
 }
 
 vector<CODE> code;
+void add_int8(int8_t a)
+{
+    code.push_back((int8_t)a);
+}
+
+void add_int32(int32_t a)
+{
+    auto size=code.size();
+    code.resize(size+4);
+    *(int32_t*)&code[size]=a;
+}
 bool gen_code()
 {
+    int op_code_size=0;
     for(auto &x:s_code)
     {
+        op_pos[op_pos.size()]=op_code_size;
         if(!opcode.count(x.oper))
         {
             fprintf(stderr,"Error(line %d): unknown instruction \"%s\"\n",x.line,x.oper.c_str());
             return false;
         }
         int op=opcode[x.oper];
-        if(op==OP_LOAD)
+        int int_opnd=-1;
+        if(op==OP_PUSH)
         {
-
-            if(x.opnd.size()!=2)
-            {
-                fprintf(stderr,"Error(line %d): too much operand\n",x.line);
-                return false;
-            }
-            switch(get_opnd_type(x.opnd[1]))
+            switch(get_opnd_type(x.opnd))
             {
                 case OT_NULL:
-                    code.push_back(gcode(OP_NLOAD));
-                    continue;
-                case OT_TRUE:
-                    code.push_back(gcode(OP_BLOAD,1));
-                    continue;
-                case OT_FALSE:
-                      code.push_back(gcode(OP_BLOAD,0));
-                    continue;
+                    op=OP_NPUSH;
+                    break;
+                case OT_BOOL:
+                    op=OP_BPUSH;
+                    break;
                 case OT_INT:
-                    op=OP_ILOAD;
+                    op=OP_IPUSH;
                     break;
                 case OT_FLOAT:
-                    op=OP_FLOAD;
+                    op=OP_FPUSH;
                     break;
                 case OT_STRING:
-                    op=OP_SLOAD;
+                    op=OP_SPUSH;
                     break;
                 default:
                     fprintf(stderr,"Error(line %d): incorrect operand\n",x.line);
                     return false;
             }
-            int v0=get_opnd_int(x.opnd[0]),v1;
-            get_opnd(x.opnd[1],v1);
-            code.push_back(gcode((OPCODE)op,v0,v1));
-            continue;
+            get_opnd(x.opnd,int_opnd);
         }
-        int opnds[2];
-        for(int i=0;i<x.opnd.size();i++)
+        code.push_back(op);
+        switch(op)
         {
-            switch(get_opnd_type(x.opnd[i]))
-            {
-                case OT_INT:
-                    opnds[i]=get_opnd_int(x.opnd[i]);
-                    break;
-                case OT_LABEL:
-                    if(!get_opnd(x.opnd[i],opnds[i]))return fprintf(stderr,"Error(line %d): cannot found label \"%s\"\n",x.line,x.opnd[i].c_str()),false;
-                    break;
-                default:
-                fprintf(stderr,"Error(line %d): incorrect operand, operand must be integer or label\n",x.line);
-                return false;
-            }
+            case OP_IPUSH:
+            case OP_FPUSH:
+            case OP_SPUSH:
+            case OP_LOAD_GLOBAL:
+            case OP_STORE_GLOBAL:
+            case OP_LOAD:
+            case OP_STORE:
+            case OP_ADDSP:
+            case OP_SUBSP:
+            case OP_CALL:
+                if(int_opnd==-1)int_opnd=atoi(x.opnd.c_str());
+                add_int32(int_opnd);
+                break;
+            case OP_JMP:
+                jmp_table.push_back({code.size(),labels[x.opnd]});
+                add_int32(0);
+                break;
+            case OP_BPUSH:
+                add_int8(x.opnd[0]=='T'?1:0);
+                break;
         }
-        switch(x.opnd.size())
-        {
-            case 0:
-                code.push_back(gcode((OPCODE)op));
-                break;
-            case 1:
-                code.push_back(gcode((OPCODE)op,opnds[0]));
-                break;
-            case 2:
-                code.push_back(gcode((OPCODE)op,opnds[0],opnds[1]));
-                break;
-            default:
-                fprintf(stderr,"Error(line %d): too much operand\n",x.line);
-                return false;
-        }
+        op_code_size+=op_length[op];
+    }
+    for(auto &x:jmp_table)
+    {
+        *(int32_t*)&code[x.first]=op_pos[x.second];
     }
     return true;
 }

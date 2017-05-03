@@ -7,28 +7,31 @@ mul
 push 2
 shl
 store_global 1
+pop
 load_global 0
 set_this
 push "println"
 object_get
 store_global 2
+pop
 load_global 0
 set_this
 push "print"
 object_get
 store_global 3
+pop
 load_global 0
 set_this
 push "scani"
 object_get
 store_global 4
+pop
 ; arugment 0
 push "haha: "
 load_global 1
 add
 load_global 2
 call 1
-grv
 pop
 push 7
 load_global 1
@@ -42,12 +45,12 @@ load_global 1
 add
 load_global 2
 call 1
-grv
 pop
 ; for statement
 ; init
 push 0
 store 5
+pop
 label_0:
 ; check expression
 load 5
@@ -65,26 +68,25 @@ set_this
 push "println"
 object_get
 call 1
-grv
 pop
 label_2:
 ; loop expression
 load 5
-dup
 inc
 store 5
+pop
 jmp label_0
 label_1:
 ; arugment 0
 push "来打印一个9*9乘法表"
 load_global 2
 call 1
-grv
 pop
 ; for statement
 ; init
 push 1
 store 5
+pop
 label_3:
 ; check expression
 load 5
@@ -97,6 +99,7 @@ jmp label_4
 ; init
 push 1
 store 6
+pop
 label_6:
 ; check expression
 load 6
@@ -109,25 +112,21 @@ jmp label_7
 load 6
 load_global 3
 call 1
-grv
 pop
 ; arugment 0
 push "*"
 load_global 3
 call 1
-grv
 pop
 ; arugment 0
 load 5
 load_global 3
 call 1
-grv
 pop
 ; arugment 0
 push "="
 load_global 3
 call 1
-grv
 pop
 ; arugment 0
 load 5
@@ -135,41 +134,37 @@ load 6
 mul
 load_global 3
 call 1
-grv
 pop
 ; arugment 0
 push "  "
 load_global 3
 call 1
-grv
 pop
 label_8:
 ; loop expression
 load 6
-dup
 inc
 store 6
+pop
 jmp label_6
 label_7:
 ; arugment 0
 push ""
 load_global 2
 call 1
-grv
 pop
 label_5:
 ; loop expression
 load 5
-dup
 inc
 store 5
+pop
 jmp label_3
 label_4:
 ; arugment 0
 push "现在开始测试..树煮"
 load_global 2
 call 1
-grv
 pop
 new_array
 push 1
@@ -181,6 +176,7 @@ array_push
 push 4
 array_push
 store_global 5
+pop
 push "sss"
 load_global 5
 set_this
@@ -195,21 +191,23 @@ set_this
 push "push"
 object_get
 store_global 6
+pop
 load_global 0
 set_this
 push "len"
 object_get
 store_global 7
+pop
 ; arugment 0
 push "----------------"
 load_global 2
 call 1
-grv
 pop
 ; for statement
 ; init
 push 0
 store 8
+pop
 label_9:
 ; check expression
 load 8
@@ -217,7 +215,6 @@ load 8
 load_global 5
 load_global 7
 call 1
-grv
 less
 istrue
 jmp label_10
@@ -229,14 +226,13 @@ load 8
 object_get
 load_global 2
 call 1
-grv
 pop
 label_11:
 ; loop expression
 load 8
-dup
 inc
 store 8
+pop
 jmp label_9
 label_10:
 ; arugment 4
@@ -252,10 +248,8 @@ push "fuck the world"
 load_global 5
 load_global 6
 call 1
-grv
 load_global 6
 call 5
-grv
 pop
 ; if statement
 ; arugment 1
@@ -264,7 +258,6 @@ push "666"
 load_global 5
 load_global 6
 call 2
-grv
 istrue
 jmp label_12
 ; true branch
@@ -272,6 +265,7 @@ jmp label_12
 ; init
 push 0
 store 8
+pop
 label_13:
 ; check expression
 load 8
@@ -282,7 +276,6 @@ set_this
 push "len"
 object_get
 call 1
-grv
 less
 istrue
 jmp label_14
@@ -294,14 +287,13 @@ load 8
 object_get
 load_global 2
 call 1
-grv
 pop
 label_15:
 ; loop expression
 load 8
-dup
 inc
 store 8
+pop
 jmp label_13
 label_14:
 label_12:
@@ -310,7 +302,6 @@ label_12:
 push 1
 load_global 6
 call 1
-grv
 lnot
 istrue
 jmp label_16
@@ -319,19 +310,21 @@ jmp label_16
 push "不能push非树煮"
 load_global 2
 call 1
-grv
 pop
 label_16:
 new_object
 push "world"
 push "string"
 object_set
+pop
 push 1234f
 push "int"
 object_set
+pop
 push 222.123123
 push "float"
 object_set
+pop
 new_array
 push 1
 array_push
@@ -350,42 +343,50 @@ push 6666
 array_push
 push 77777
 array_push
-set_this
+reset_this
 array_push
-set_this
+reset_this
 push "wtf"
 object_set
-set_this
+pop
+reset_this
 array_push
-set_this
+reset_this
 push "array"
 object_set
+pop
 new_object
 push "maki"
 push "nico"
 object_set
+pop
 push 2.3333
 push "kotiri"
 object_set
-set_this
+pop
+reset_this
 push "object"
 object_set
+pop
 store_global 8
+pop
 load_global 0
 set_this
 push "get_keys"
 object_get
 store_global 9
+pop
 ; arugment 0
 load_global 8
 load_global 9
 call 1
-grv
 store_global 10
+pop
 ; for statement
 ; init
 push 0
 store 11
+pop
 label_17:
 ; check expression
 load 11
@@ -393,7 +394,6 @@ load 11
 load_global 10
 load_global 7
 call 1
-grv
 less
 istrue
 jmp label_18
@@ -405,14 +405,13 @@ load 11
 object_get
 load_global 2
 call 1
-grv
 pop
 label_19:
 ; loop expression
 load 11
-dup
 inc
 store 11
+pop
 jmp label_17
 label_18:
 load_global 8
@@ -431,7 +430,6 @@ object_get
 set_this
 push 1
 object_get
-dup
 inc
 object_reset
 pop
@@ -449,6 +447,7 @@ set_this
 push 1
 object_get
 store_global 11
+pop
 ; arugment 3
 push "hahaha"
 ; arugment 2
@@ -459,12 +458,12 @@ push "1"
 load_global 11
 load_global 6
 call 4
-grv
 pop
 ; for statement
 ; init
 push 0
 store 12
+pop
 label_20:
 ; check expression
 load 12
@@ -472,7 +471,6 @@ load 12
 load_global 11
 load_global 7
 call 1
-grv
 less
 istrue
 jmp label_21
@@ -484,34 +482,30 @@ load 12
 object_get
 load_global 2
 call 1
-grv
 pop
 label_22:
 ; loop expression
 load 12
-dup
 inc
 store 12
+pop
 jmp label_20
 label_21:
 ; arugment 0
 push "asadgasd"
 load_global 2
 call 1
-grv
 pop
 ; arugment 0
 push "请输入一个在[10,15]之间的整数\n"
 load_global 3
 call 1
-grv
 pop
 ; while statement
 label_23:
 ; check expression
 load_global 4
 call 0
-grv
 store_global 12
 push 10
 ge
@@ -527,7 +521,6 @@ jmp label_24
 push "请输入一个在[10,15]之间的整数"
 load_global 2
 call 1
-grv
 pop
 jmp label_23
 label_24:
@@ -535,13 +528,11 @@ label_24:
 push "我知道..用do写会更优雅一些...上面我只是为了测试while..."
 load_global 2
 call 1
-grv
 pop
 ; arugment 0
 push "于是我用do再来一次"
 load_global 2
 call 1
-grv
 pop
 ; do statement
 label_25:
@@ -550,13 +541,11 @@ label_25:
 push "请输入一个在[10,15]之间的整数"
 load_global 2
 call 1
-grv
 pop
 label_27:
 ; check expression
 load_global 4
 call 0
-grv
 store_global 12
 push 10
 ge
@@ -581,7 +570,6 @@ jmp label_29
 push "1+1>2"
 load_global 2
 call 1
-grv
 pop
 jmp label_28
 label_29:
@@ -590,20 +578,17 @@ label_29:
 push "1+1不大于2"
 load_global 2
 call 1
-grv
 pop
 label_28:
 ; switch statement
 load_global 4
 call 0
-grv
 ; default clause
 label_32:
 ; arugment 0
 push "默认..."
 load_global 2
 call 1
-grv
 pop
 jmp label_34
 label_31:
@@ -616,7 +601,6 @@ label_34:
 push "case 1"
 load_global 2
 call 1
-grv
 pop
 jmp label_30
 label_33:
@@ -628,21 +612,21 @@ jmp label_35
 push "case 3"
 load_global 2
 call 1
-grv
 pop
 label_35:
 jmp label_32
 label_30:
+pop
 ; arugment 0
 push '来打个素数表试试\'\n'
 load_global 3
 call 1
-grv
 pop
 ; for statement
 ; init
 push 2
 store 13
+pop
 label_36:
 ; check expression
 load 13
@@ -680,9 +664,9 @@ label_42:
 label_41:
 ; loop expression
 load 14
-dup
 inc
 store 14
+pop
 jmp label_39
 label_40:
 ; if statement
@@ -698,26 +682,24 @@ jmp label_43
 load 13
 load_global 3
 call 1
-grv
+pop
 ; arugment 0
 push " "
 load_global 3
 call 1
-grv
 pop
 label_43:
 label_38:
 ; loop expression
 load 13
-dup
 inc
 store 13
+pop
 jmp label_36
 label_37:
 ; arugment 0
-push ""
+push "\nend"
 load_global 2
 call 1
-grv
 pop
 subsp 15

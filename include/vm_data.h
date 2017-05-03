@@ -4,10 +4,11 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "stack.hpp"
 using namespace std;
 
-#define NATIVE_FUNCTION_SIGN(NAME) void (NAME)(int argc, V_VALUE *argv, V_VALUE &ret)
-#define GET_ARGV(N) argv[-N]
+#define NATIVE_FUNCTION_SIGN(NAME) void (NAME)(int argc, Stack<V_VALUE> &v_stack, V_VALUE &ret)
+#define GET_ARGV(N) v_stack.top(N)
 struct V_VALUE;
 typedef NATIVE_FUNCTION_SIGN(*NATIVE_FUNCTION_TYPE);
 typedef int FUNCTION_TYPE;
@@ -22,8 +23,9 @@ typedef map<string,V_VALUE> OBJECT_OTYPE;
 typedef STRING_OTYPE *STRING_TYPE;
 typedef ARRAY_OTYPE*ARRAY_TYPE;
 typedef OBJECT_OTYPE *OBJECT_TYPE;
-typedef uint32_t CODE;
+
 typedef unsigned char BYTE;
+typedef BYTE CODE;
 enum DATATYPE
 {
     // value type
