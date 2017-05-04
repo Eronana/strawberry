@@ -12,4 +12,5 @@ ARRAY_TYPE newArray();
 OBJECT_TYPE newObject();
 void gc();
 void setRoot(Stack<V_VALUE> *v_stack);
+void addExtraRoot(V_VALUE *root);
 #endif

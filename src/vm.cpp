@@ -377,6 +377,8 @@ VirtualMachine::VirtualMachine()
 {
     BUILDIN_FUNC_LIST(REG_BUILDIN_FUNC)
     setRoot(&v_stack);
+    addExtraRoot(&reg_this);
+    addExtraRoot(&reg_ret);
 }
 bool VirtualMachine::load(const char *filename)
 {

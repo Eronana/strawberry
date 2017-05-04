@@ -111,7 +111,7 @@ println("\nend");
 
 // TODO:
 // [x] fix switch
-// [ ] gc
+// [x] gc
 // [ ] function
 // [ ] closure
 
