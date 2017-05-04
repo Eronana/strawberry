@@ -15,8 +15,9 @@ T(push)\
 T(clear)\
 T(resize)\
 T(get_keys)\
+T(gc)\
 
-#define GET_BUILDIN_FUNC_NAME(NAME) build_in##NAME
+#define GET_BUILDIN_FUNC_NAME(NAME) build_in##NAME##_
 #define BUILD_FUNC_SIGN(NAME) NATIVE_FUNCTION_SIGN(GET_BUILDIN_FUNC_NAME(NAME))
 #define DECL_BUILDIN_FUNC_SIGN(NAME) BUILD_FUNC_SIGN(NAME);
 

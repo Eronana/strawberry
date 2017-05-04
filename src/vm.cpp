@@ -93,7 +93,7 @@ DEF_FUNC(SPUSH)
 {
     v_stack.add();
     STOP.type=T_STRING;
-    STOP.v_string=NEW(STRING_OTYPE);
+    STOP.v_string=newString();
     *STOP.v_string=code_data.string_table[get_int32()];
 }
 
@@ -107,7 +107,7 @@ DEF_FUNC(NEW_ARRAY)
 {
     v_stack.add();
     STOP.type=T_ARRAY;
-    STOP.v_array=NEW(ARRAY_OTYPE);
+    STOP.v_array=newArray();
     reg_this=STOP;
 }
 
@@ -115,7 +115,7 @@ DEF_FUNC(NEW_OBJECT)
 {
     v_stack.add();
     STOP.type=T_OBJECT;
-    STOP.v_object=NEW(OBJECT_OTYPE);
+    STOP.v_object=newObject();
     reg_this=STOP;
 }
 
@@ -213,7 +213,7 @@ DEF_FUNC(LNOT)
 
 DEF_FUNC(TYPEOF)
 {
-    STOP.v_string=NEW(STRING_OTYPE);
+    STOP.v_string=newString();
     *STOP.v_string=type_name[STOP.type];
     STOP.type=T_STRING;
 }
@@ -376,6 +376,7 @@ DEF_FUNC(HALT)
 VirtualMachine::VirtualMachine()
 {
     BUILDIN_FUNC_LIST(REG_BUILDIN_FUNC)
+    setRoot(&v_stack);
 }
 bool VirtualMachine::load(const char *filename)
 {
@@ -386,7 +387,7 @@ bool VirtualMachine::load(const char *filename)
     STOP.v_object=&reg_system;
     return true;
 }
-
+extern map<void*,pair<int,bool>> memory_table;
 void VirtualMachine::run()
 {
     unsigned int t=clock();
@@ -403,6 +404,8 @@ void VirtualMachine::run()
         //printf("STACK SIZE: %d\n",v_stack.size());
         //puts("-----------------");
     }
+    //printf("memory_table: %u\n",memory_table.size());
+    //gc();printf("memory_table: %u\n",memory_table.size());
     printf("halt in %lu clocks\n",clock()-t);
     //printf("STACK SIZE: %d\n",v_stack.size());
 }

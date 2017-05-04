@@ -26,6 +26,49 @@ push "scani"
 object_get
 store_global 4
 pop
+; arugment 0
+push "test GC"
+load_global 2
+call 1
+pop
+; for statement
+; init
+push 0
+store 5
+pop
+label_0:
+; check expression
+load 5
+push 100000
+less
+istrue
+jmp label_1
+; statement
+push "hello"
+push "hello"
+add
+push "hello"
+add
+push "hello"
+add
+push "hello"
+add
+store 6
+pop
+new_array
+new_array
+reset_this
+array_push
+store 6
+pop
+label_2:
+; loop expression
+load 5
+inc
+store 5
+pop
+jmp label_0
+label_1:
 push true
 store_global 5
 pop
@@ -90,13 +133,13 @@ pop
 push 0
 store 11
 pop
-label_0:
+label_3:
 ; check expression
 load 11
 load_global 1
 less
 istrue
-jmp label_1
+jmp label_4
 ; statement
 ; arugment 0
 load 11
@@ -108,14 +151,14 @@ push "println"
 object_get
 call 1
 pop
-label_2:
+label_5:
 ; loop expression
 load 11
 inc
 store 11
 pop
-jmp label_0
-label_1:
+jmp label_3
+label_4:
 ; arugment 0
 push "来打印一个9*9乘法表"
 load_global 2
@@ -126,26 +169,26 @@ pop
 push 1
 store 11
 pop
-label_3:
+label_6:
 ; check expression
 load 11
 push 9
 le
 istrue
-jmp label_4
+jmp label_7
 ; statement
 ; for statement
 ; init
 push 1
 store 12
 pop
-label_6:
+label_9:
 ; check expression
 load 12
 load 11
 le
 istrue
-jmp label_7
+jmp label_10
 ; statement
 ; arugment 0
 load 12
@@ -179,27 +222,27 @@ push "  "
 load_global 3
 call 1
 pop
-label_8:
+label_11:
 ; loop expression
 load 12
 inc
 store 12
 pop
-jmp label_6
-label_7:
+jmp label_9
+label_10:
 ; arugment 0
 push ""
 load_global 2
 call 1
 pop
-label_5:
+label_8:
 ; loop expression
 load 11
 inc
 store 11
 pop
-jmp label_3
-label_4:
+jmp label_6
+label_7:
 ; arugment 0
 push "现在开始测试..树煮"
 load_global 2
@@ -247,7 +290,7 @@ pop
 push 0
 store 14
 pop
-label_9:
+label_12:
 ; check expression
 load 14
 ; arugment 0
@@ -256,7 +299,7 @@ load_global 13
 call 1
 less
 istrue
-jmp label_10
+jmp label_13
 ; statement
 ; arugment 0
 load_global 11
@@ -266,14 +309,14 @@ object_get
 load_global 2
 call 1
 pop
-label_11:
+label_14:
 ; loop expression
 load 14
 inc
 store 14
 pop
-jmp label_9
-label_10:
+jmp label_12
+label_13:
 ; arugment 4
 push "66666"
 ; arugment 3
@@ -298,14 +341,14 @@ load_global 11
 load_global 12
 call 2
 istrue
-jmp label_12
+jmp label_15
 ; true branch
 ; for statement
 ; init
 push 0
 store 14
 pop
-label_13:
+label_16:
 ; check expression
 load 14
 ; arugment 0
@@ -317,7 +360,7 @@ object_get
 call 1
 less
 istrue
-jmp label_14
+jmp label_17
 ; statement
 ; arugment 0
 load_global 11
@@ -327,15 +370,15 @@ object_get
 load_global 2
 call 1
 pop
-label_15:
+label_18:
 ; loop expression
 load 14
 inc
 store 14
 pop
-jmp label_13
-label_14:
-label_12:
+jmp label_16
+label_17:
+label_15:
 ; if statement
 ; arugment 0
 push 1
@@ -343,14 +386,14 @@ load_global 12
 call 1
 lnot
 istrue
-jmp label_16
+jmp label_19
 ; true branch
 ; arugment 0
 push "不能push非树煮"
 load_global 2
 call 1
 pop
-label_16:
+label_19:
 new_object
 push "world"
 push "string"
@@ -426,7 +469,7 @@ pop
 push 0
 store 17
 pop
-label_17:
+label_20:
 ; check expression
 load 17
 ; arugment 0
@@ -435,7 +478,7 @@ load_global 13
 call 1
 less
 istrue
-jmp label_18
+jmp label_21
 ; statement
 ; arugment 0
 load_global 16
@@ -445,14 +488,14 @@ object_get
 load_global 2
 call 1
 pop
-label_19:
+label_22:
 ; loop expression
 load 17
 inc
 store 17
 pop
-jmp label_17
-label_18:
+jmp label_20
+label_21:
 load_global 14
 set_this
 push "array"
@@ -503,7 +546,7 @@ pop
 push 0
 store 18
 pop
-label_20:
+label_23:
 ; check expression
 load 18
 ; arugment 0
@@ -512,7 +555,7 @@ load_global 13
 call 1
 less
 istrue
-jmp label_21
+jmp label_24
 ; statement
 ; arugment 0
 load_global 17
@@ -522,14 +565,14 @@ object_get
 load_global 2
 call 1
 pop
-label_22:
+label_25:
 ; loop expression
 load 18
 inc
 store 18
 pop
-jmp label_20
-label_21:
+jmp label_23
+label_24:
 ; arugment 0
 push "asadgasd"
 load_global 2
@@ -538,45 +581,45 @@ pop
 ; switch statement
 load_global 4
 call 0
-jmp label_24
+jmp label_27
 ; default clause
-label_25:
+label_28:
 ; arugment 0
 push "默认..."
 load_global 2
 call 1
 pop
-jmp label_27
-label_24:
+jmp label_30
+label_27:
 dup
 push 1
 eq
 istrue
-jmp label_26
-label_27:
+jmp label_29
+label_30:
 ; arugment 0
 push "case 1"
 load_global 2
 call 1
 pop
-jmp label_29
-label_26:
+jmp label_32
+label_29:
 dup
 push 3
 eq
 istrue
-jmp label_28
-label_29:
+jmp label_31
+label_32:
 ; arugment 0
 push "case 3"
 load_global 2
 call 1
 pop
-jmp label_23
-jmp label_31
-label_28:
-jmp label_25
-label_23:
+jmp label_26
+jmp label_34
+label_31:
+jmp label_28
+label_26:
 pop
 ; arugment 0
 push "请输入一个在[10,15]之间的整数\n"
@@ -584,7 +627,7 @@ load_global 3
 call 1
 pop
 ; while statement
-label_30:
+label_33:
 ; check expression
 load_global 4
 call 0
@@ -597,15 +640,15 @@ le
 land
 lnot
 istrue
-jmp label_31
+jmp label_34
 ; statement
 ; arugment 0
 push "请输入一个在[10,15]之间的整数"
 load_global 2
 call 1
 pop
-jmp label_30
-label_31:
+jmp label_33
+label_34:
 ; arugment 0
 push "我知道..用do写会更优雅一些...上面我只是为了测试while..."
 load_global 2
@@ -617,14 +660,14 @@ load_global 2
 call 1
 pop
 ; do statement
-label_32:
+label_35:
 ; statement
 ; arugment 0
 push "请输入一个在[10,15]之间的整数"
 load_global 2
 call 1
 pop
-label_34:
+label_37:
 ; check expression
 load_global 4
 call 0
@@ -637,8 +680,8 @@ le
 land
 lnot
 isfalse
-jmp label_32
-label_33:
+jmp label_35
+label_36:
 ; if statement
 push 1
 push 1
@@ -646,22 +689,22 @@ add
 push 2
 gt
 istrue
-jmp label_36
+jmp label_39
 ; true branch
 ; arugment 0
 push "1+1>2"
 load_global 2
 call 1
 pop
-jmp label_35
-label_36:
+jmp label_38
+label_39:
 ; else branch
 ; arugment 0
 push "1+1不大于2"
 load_global 2
 call 1
 pop
-label_35:
+label_38:
 ; arugment 0
 push '来打个素数表试试\'\n'
 load_global 3
@@ -672,20 +715,20 @@ pop
 push 2
 store 19
 pop
-label_37:
+label_40:
 ; check expression
 load 19
 push 1000
 less
 istrue
-jmp label_38
+jmp label_41
 ; statement
 ; for statement
 ; init
 push 2
 store 20
 pop
-label_40:
+label_43:
 ; check expression
 load 20
 load 20
@@ -693,7 +736,7 @@ mul
 load 19
 le
 istrue
-jmp label_41
+jmp label_44
 ; statement
 ; if statement
 load 19
@@ -702,18 +745,18 @@ mod
 push 0
 eq
 istrue
-jmp label_43
+jmp label_46
 ; true branch
-jmp label_41
-label_43:
-label_42:
+jmp label_44
+label_46:
+label_45:
 ; loop expression
 load 20
 inc
 store 20
 pop
-jmp label_40
-label_41:
+jmp label_43
+label_44:
 ; if statement
 load 20
 load 20
@@ -721,7 +764,7 @@ mul
 load 19
 gt
 istrue
-jmp label_44
+jmp label_47
 ; true branch
 ; arugment 0
 load 19
@@ -733,15 +776,15 @@ push " "
 load_global 3
 call 1
 pop
-label_44:
-label_39:
+label_47:
+label_42:
 ; loop expression
 load 19
 inc
 store 19
 pop
-jmp label_37
-label_38:
+jmp label_40
+label_41:
 ; arugment 0
 push "\nend"
 load_global 2

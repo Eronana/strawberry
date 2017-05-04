@@ -29,7 +29,7 @@ BUILD_FUNC_SIGN(scans)
     char s[1000];
     ret.type=T_STRING;
     scanf("%s",s);
-    ret.v_string=NEW(STRING_OTYPE);
+    ret.v_string=newString();
     *ret.v_string=s;
 }
 
@@ -81,7 +81,7 @@ BUILD_FUNC_SIGN(resize)
 BUILD_FUNC_SIGN(get_keys)
 {
     ret.type=T_ARRAY;
-    ret.v_array=NEW(ARRAY_OTYPE);
+    ret.v_array=newArray();
     if(GET_ARGV(0).type==T_OBJECT)
     {
         int i=0;
@@ -89,7 +89,7 @@ BUILD_FUNC_SIGN(get_keys)
         for(auto &x:*GET_ARGV(0).v_object)
         {
             (*ret.v_array)[i].type=T_STRING;
-            (*ret.v_array)[i].v_string=NEW(STRING_OTYPE);
+            (*ret.v_array)[i].v_string=newString();
             *(*ret.v_array)[i].v_string=x.first;
             i++;
         }
@@ -104,4 +104,10 @@ BUILD_FUNC_SIGN(get_keys)
             (*ret.v_array)[i].v_int=i;
         }
     }
+}
+
+
+BUILD_FUNC_SIGN(gc)
+{
+    gc();
 }
