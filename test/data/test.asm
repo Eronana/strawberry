@@ -1,4 +1,4 @@
-addsp 15
+addsp 13
 push 3
 push 4
 push 5
@@ -496,210 +496,47 @@ push "asadgasd"
 load_global 2
 call 1
 pop
-; arugment 0
-push "请输入一个在[10,15]之间的整数\n"
-load_global 3
-call 1
-pop
-; while statement
-label_23:
-; check expression
-load_global 4
-call 0
-store_global 12
-push 10
-ge
-load_global 12
-push 15
-le
-land
-lnot
-istrue
-jmp label_24
-; statement
-; arugment 0
-push "请输入一个在[10,15]之间的整数"
-load_global 2
-call 1
-pop
-jmp label_23
-label_24:
-; arugment 0
-push "我知道..用do写会更优雅一些...上面我只是为了测试while..."
-load_global 2
-call 1
-pop
-; arugment 0
-push "于是我用do再来一次"
-load_global 2
-call 1
-pop
-; do statement
-label_25:
-; statement
-; arugment 0
-push "请输入一个在[10,15]之间的整数"
-load_global 2
-call 1
-pop
-label_27:
-; check expression
-load_global 4
-call 0
-store_global 12
-push 10
-ge
-load_global 12
-push 15
-le
-land
-lnot
-isfalse
-jmp label_25
-label_26:
-; if statement
-push 1
-push 1
-add
-push 2
-gt
-istrue
-jmp label_29
-; true branch
-; arugment 0
-push "1+1>2"
-load_global 2
-call 1
-pop
-jmp label_28
-label_29:
-; else branch
-; arugment 0
-push "1+1不大于2"
-load_global 2
-call 1
-pop
-label_28:
 ; switch statement
 load_global 4
 call 0
+jmp label_24
 ; default clause
-label_32:
+label_25:
 ; arugment 0
 push "默认..."
 load_global 2
 call 1
 pop
-jmp label_34
-label_31:
+jmp label_27
+label_24:
+dup
 push 1
 eq
 istrue
-jmp label_33
-label_34:
+jmp label_26
+label_27:
 ; arugment 0
 push "case 1"
 load_global 2
 call 1
 pop
-jmp label_30
-label_33:
+jmp label_29
+label_26:
+dup
 push 3
 eq
 istrue
-jmp label_35
+jmp label_28
+label_29:
 ; arugment 0
 push "case 3"
 load_global 2
 call 1
 pop
-label_35:
-jmp label_32
-label_30:
+jmp label_23
+jmp label_31
+label_28:
+jmp label_25
+label_23:
 pop
-; arugment 0
-push '来打个素数表试试\'\n'
-load_global 3
-call 1
-pop
-; for statement
-; init
-push 2
-store 13
-pop
-label_36:
-; check expression
-load 13
-push 1000
-less
-istrue
-jmp label_37
-; statement
-; for statement
-; init
-push 2
-store 14
-pop
-label_39:
-; check expression
-load 14
-load 14
-mul
-load 13
-le
-istrue
-jmp label_40
-; statement
-; if statement
-load 13
-load 14
-mod
-push 0
-eq
-istrue
-jmp label_42
-; true branch
-jmp label_40
-label_42:
-label_41:
-; loop expression
-load 14
-inc
-store 14
-pop
-jmp label_39
-label_40:
-; if statement
-load 14
-load 14
-mul
-load 13
-gt
-istrue
-jmp label_43
-; true branch
-; arugment 0
-load 13
-load_global 3
-call 1
-pop
-; arugment 0
-push " "
-load_global 3
-call 1
-pop
-label_43:
-label_38:
-; loop expression
-load 13
-inc
-store 13
-pop
-jmp label_36
-label_37:
-; arugment 0
-push "\nend"
-load_global 2
-call 1
-pop
-subsp 15
+subsp 13

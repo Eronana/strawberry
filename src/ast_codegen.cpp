@@ -458,25 +458,25 @@ DEF_AST_METHOD(CaseClause,AST_CODEGEN)
     int nextCaluse=nextLabel();
     if(expr)
     {
+        PRINTF("dup\n");
         CODEGEN(expr);
         PRINTF("eq\n");
         PRINTF("istrue\n");
         PRINTF("jmp label_%d\n",nextCaluse);
-        // hack for default caluse
-        if(nextCaluse-1==defaultClauseStack.top())PRINTF("label_%d:\n",nextLabel());
+        PRINTF("label_%d:\n",nextLabel());
         CODEGEN(stmtList);
     }
     else
     {
         int defaultLabel=nextLabel();
+        int lastLabel=breakStack.top();
         defaultClauseStack.top()=defaultLabel;
+        if(lastLabel+1==nextCaluse)PRINTF("jmp label_%d\n",nextCaluse);
         PRINTF("; default clause\n");
         PRINTF("label_%d:\n",defaultLabel);
         CODEGEN(stmtList);
-        // hack for default caluse
-        PRINTF("jmp label_%d\n",nextCaluse+3);
     }
-    
+    PRINTF("jmp label_%d\n",nextCaluse+3);
     PRINTF("label_%d:\n",nextCaluse);
 }
 DEF_AST_METHOD(CaseBlock,AST_CODEGEN)

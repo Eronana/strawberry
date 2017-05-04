@@ -60,6 +60,17 @@ push(bwtf,"1",2222,"hahaha");
 for(var i=0;i<len(bwtf);i++)println(bwtf[i]);
 println("asadgasd");
 
+switch(scani())
+{
+    default:
+        println("默认...");
+    case 1:
+        println("case 1");
+    case 3:
+        println("case 3");
+        break;
+}
+/*
 print("请输入一个在[10,15]之间的整数\n");
 var tmp;
 
@@ -70,16 +81,7 @@ do println("请输入一个在[10,15]之间的整数");while(!((tmp=scani())>=10
 if(1+1>2)println("1+1>2");
 else println("1+1不大于2");
 
-switch(scani())
-{
-    default:
-        println("默认...");
-    case 1:
-        println("case 1");
-        break;
-    case 3:
-        println("case 3");
-}
+
 
 print('来打个素数表试试\'\n');
 for(var i=2;i<1000;i++)
@@ -89,6 +91,12 @@ for(var i=2;i<1000;i++)
     if(j*j>i)print(i),print(" ");
 }
 println("\nend");
+*/
+// TODO:
+// - fix switch
+// - gc
+// - function
+// - closure
 /*
 
 for(var i=0;i<4;i++)println(a[i]);
