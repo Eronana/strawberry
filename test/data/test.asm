@@ -1,4 +1,4 @@
-addsp 13
+addsp 21
 push 3
 push 4
 push 5
@@ -26,6 +26,45 @@ push "scani"
 object_get
 store_global 4
 pop
+push true
+store_global 5
+pop
+push false
+store_global 6
+pop
+load_global 5
+load_global 6
+land
+store_global 7
+pop
+load_global 5
+load_global 6
+lor
+store_global 8
+pop
+load_global 5
+lnot
+store_global 9
+pop
+load_global 6
+lnot
+store_global 10
+pop
+; arugment 5
+load_global 10
+; arugment 4
+load_global 9
+; arugment 3
+load_global 8
+; arugment 2
+load_global 7
+; arugment 1
+load_global 6
+; arugment 0
+load_global 5
+load_global 2
+call 6
+pop
 ; arugment 0
 push "haha: "
 load_global 1
@@ -49,19 +88,19 @@ pop
 ; for statement
 ; init
 push 0
-store 5
+store 11
 pop
 label_0:
 ; check expression
-load 5
+load 11
 load_global 1
 less
 istrue
 jmp label_1
 ; statement
 ; arugment 0
-load 5
-load 5
+load 11
+load 11
 mul
 load_global 0
 set_this
@@ -71,9 +110,9 @@ call 1
 pop
 label_2:
 ; loop expression
-load 5
+load 11
 inc
-store 5
+store 11
 pop
 jmp label_0
 label_1:
@@ -85,11 +124,11 @@ pop
 ; for statement
 ; init
 push 1
-store 5
+store 11
 pop
 label_3:
 ; check expression
-load 5
+load 11
 push 9
 le
 istrue
@@ -98,18 +137,18 @@ jmp label_4
 ; for statement
 ; init
 push 1
-store 6
+store 12
 pop
 label_6:
 ; check expression
-load 6
-load 5
+load 12
+load 11
 le
 istrue
 jmp label_7
 ; statement
 ; arugment 0
-load 6
+load 12
 load_global 3
 call 1
 pop
@@ -119,7 +158,7 @@ load_global 3
 call 1
 pop
 ; arugment 0
-load 5
+load 11
 load_global 3
 call 1
 pop
@@ -129,8 +168,8 @@ load_global 3
 call 1
 pop
 ; arugment 0
-load 5
-load 6
+load 11
+load 12
 mul
 load_global 3
 call 1
@@ -142,9 +181,9 @@ call 1
 pop
 label_8:
 ; loop expression
-load 6
+load 12
 inc
-store 6
+store 12
 pop
 jmp label_6
 label_7:
@@ -155,9 +194,9 @@ call 1
 pop
 label_5:
 ; loop expression
-load 5
+load 11
 inc
-store 5
+store 11
 pop
 jmp label_3
 label_4:
@@ -175,10 +214,10 @@ push 3.1315926
 array_push
 push 4
 array_push
-store_global 5
+store_global 11
 pop
 push "sss"
-load_global 5
+load_global 11
 set_this
 push 1
 object_get
@@ -190,13 +229,13 @@ load_global 0
 set_this
 push "push"
 object_get
-store_global 6
+store_global 12
 pop
 load_global 0
 set_this
 push "len"
 object_get
-store_global 7
+store_global 13
 pop
 ; arugment 0
 push "----------------"
@@ -206,32 +245,32 @@ pop
 ; for statement
 ; init
 push 0
-store 8
+store 14
 pop
 label_9:
 ; check expression
-load 8
+load 14
 ; arugment 0
-load_global 5
-load_global 7
+load_global 11
+load_global 13
 call 1
 less
 istrue
 jmp label_10
 ; statement
 ; arugment 0
-load_global 5
+load_global 11
 set_this
-load 8
+load 14
 object_get
 load_global 2
 call 1
 pop
 label_11:
 ; loop expression
-load 8
+load 14
 inc
-store 8
+store 14
 pop
 jmp label_9
 label_10:
@@ -245,18 +284,18 @@ push "膜蛤"
 push "fuck the world"
 ; arugment 0
 ; arugment 0
-load_global 5
-load_global 6
+load_global 11
+load_global 12
 call 1
-load_global 6
+load_global 12
 call 5
 pop
 ; if statement
 ; arugment 1
 push "666"
 ; arugment 0
-load_global 5
-load_global 6
+load_global 11
+load_global 12
 call 2
 istrue
 jmp label_12
@@ -264,13 +303,13 @@ jmp label_12
 ; for statement
 ; init
 push 0
-store 8
+store 14
 pop
 label_13:
 ; check expression
-load 8
+load 14
 ; arugment 0
-load_global 5
+load_global 11
 load_global 0
 set_this
 push "len"
@@ -281,18 +320,18 @@ istrue
 jmp label_14
 ; statement
 ; arugment 0
-load_global 5
+load_global 11
 set_this
-load 8
+load 14
 object_get
 load_global 2
 call 1
 pop
 label_15:
 ; loop expression
-load 8
+load 14
 inc
-store 8
+store 14
 pop
 jmp label_13
 label_14:
@@ -300,7 +339,7 @@ label_12:
 ; if statement
 ; arugment 0
 push 1
-load_global 6
+load_global 12
 call 1
 lnot
 istrue
@@ -368,53 +407,53 @@ reset_this
 push "object"
 object_set
 pop
-store_global 8
+store_global 14
 pop
 load_global 0
 set_this
 push "get_keys"
 object_get
-store_global 9
+store_global 15
 pop
 ; arugment 0
-load_global 8
-load_global 9
+load_global 14
+load_global 15
 call 1
-store_global 10
+store_global 16
 pop
 ; for statement
 ; init
 push 0
-store 11
+store 17
 pop
 label_17:
 ; check expression
-load 11
+load 17
 ; arugment 0
-load_global 10
-load_global 7
+load_global 16
+load_global 13
 call 1
 less
 istrue
 jmp label_18
 ; statement
 ; arugment 0
-load_global 10
+load_global 16
 set_this
-load 11
+load 17
 object_get
 load_global 2
 call 1
 pop
 label_19:
 ; loop expression
-load 11
+load 17
 inc
-store 11
+store 17
 pop
 jmp label_17
 label_18:
-load_global 8
+load_global 14
 set_this
 push "array"
 object_get
@@ -433,7 +472,7 @@ object_get
 inc
 object_reset
 pop
-load_global 8
+load_global 14
 set_this
 push "array"
 object_get
@@ -446,7 +485,7 @@ object_get
 set_this
 push 1
 object_get
-store_global 11
+store_global 17
 pop
 ; arugment 3
 push "hahaha"
@@ -455,39 +494,39 @@ push 2222
 ; arugment 1
 push "1"
 ; arugment 0
-load_global 11
-load_global 6
+load_global 17
+load_global 12
 call 4
 pop
 ; for statement
 ; init
 push 0
-store 12
+store 18
 pop
 label_20:
 ; check expression
-load 12
+load 18
 ; arugment 0
-load_global 11
-load_global 7
+load_global 17
+load_global 13
 call 1
 less
 istrue
 jmp label_21
 ; statement
 ; arugment 0
-load_global 11
+load_global 17
 set_this
-load 12
+load 18
 object_get
 load_global 2
 call 1
 pop
 label_22:
 ; loop expression
-load 12
+load 18
 inc
-store 12
+store 18
 pop
 jmp label_20
 label_21:
@@ -539,4 +578,173 @@ label_28:
 jmp label_25
 label_23:
 pop
-subsp 13
+; arugment 0
+push "请输入一个在[10,15]之间的整数\n"
+load_global 3
+call 1
+pop
+; while statement
+label_30:
+; check expression
+load_global 4
+call 0
+store_global 18
+push 10
+ge
+load_global 18
+push 15
+le
+land
+lnot
+istrue
+jmp label_31
+; statement
+; arugment 0
+push "请输入一个在[10,15]之间的整数"
+load_global 2
+call 1
+pop
+jmp label_30
+label_31:
+; arugment 0
+push "我知道..用do写会更优雅一些...上面我只是为了测试while..."
+load_global 2
+call 1
+pop
+; arugment 0
+push "于是我用do再来一次"
+load_global 2
+call 1
+pop
+; do statement
+label_32:
+; statement
+; arugment 0
+push "请输入一个在[10,15]之间的整数"
+load_global 2
+call 1
+pop
+label_34:
+; check expression
+load_global 4
+call 0
+store_global 18
+push 10
+ge
+load_global 18
+push 15
+le
+land
+lnot
+isfalse
+jmp label_32
+label_33:
+; if statement
+push 1
+push 1
+add
+push 2
+gt
+istrue
+jmp label_36
+; true branch
+; arugment 0
+push "1+1>2"
+load_global 2
+call 1
+pop
+jmp label_35
+label_36:
+; else branch
+; arugment 0
+push "1+1不大于2"
+load_global 2
+call 1
+pop
+label_35:
+; arugment 0
+push '来打个素数表试试\'\n'
+load_global 3
+call 1
+pop
+; for statement
+; init
+push 2
+store 19
+pop
+label_37:
+; check expression
+load 19
+push 1000
+less
+istrue
+jmp label_38
+; statement
+; for statement
+; init
+push 2
+store 20
+pop
+label_40:
+; check expression
+load 20
+load 20
+mul
+load 19
+le
+istrue
+jmp label_41
+; statement
+; if statement
+load 19
+load 20
+mod
+push 0
+eq
+istrue
+jmp label_43
+; true branch
+jmp label_41
+label_43:
+label_42:
+; loop expression
+load 20
+inc
+store 20
+pop
+jmp label_40
+label_41:
+; if statement
+load 20
+load 20
+mul
+load 19
+gt
+istrue
+jmp label_44
+; true branch
+; arugment 0
+load 19
+load_global 3
+call 1
+pop
+; arugment 0
+push " "
+load_global 3
+call 1
+pop
+label_44:
+label_39:
+; loop expression
+load 19
+inc
+store 19
+pop
+jmp label_37
+label_38:
+; arugment 0
+push "\nend"
+load_global 2
+call 1
+pop
+subsp 21

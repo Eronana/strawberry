@@ -70,6 +70,7 @@ DEF_FUNC(NPUSH)
 
 DEF_FUNC(BPUSH)
 {
+    v_stack.add();
     STOP.type=T_BOOL;
     STOP.v_bool=get_int8();
 }

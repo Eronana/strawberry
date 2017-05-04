@@ -2,6 +2,14 @@ var haha=(3*(4+5))<<2;
 var println=system.println;
 var print=system.print;
 var scani=system.scani;
+
+var t=true,f=false;
+var t1=t&&f;
+var t2=t||f;
+var t3=!t;
+var t4=!f;
+println(t,f,t1,t2,t3,t4);
+
 println("haha: "+haha);
 haha%=7;
 println("haha mo 7: "+haha);
@@ -70,7 +78,7 @@ switch(scani())
         println("case 3");
         break;
 }
-/*
+
 print("请输入一个在[10,15]之间的整数\n");
 var tmp;
 
@@ -91,14 +99,14 @@ for(var i=2;i<1000;i++)
     if(j*j>i)print(i),print(" ");
 }
 println("\nend");
-*/
-// TODO:
-// - fix switch
-// - gc
-// - function
-// - closure
-/*
 
+// TODO:
+// [x] fix switch
+// [ ] gc
+// [ ] function
+// [ ] closure
+
+/*
 for(var i=0;i<4;i++)println(a[i]);
 var len;
 var each=function(a,f){

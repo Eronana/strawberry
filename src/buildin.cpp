@@ -3,7 +3,8 @@
 
 BUILD_FUNC_SIGN(print)
 {
-    for(int i=0;i<argc;i++)fputs(GET_ARGV(i).toString().c_str(),stdout);
+    if(argc)fputs(GET_ARGV(0).toString().c_str(),stdout);
+    for(int i=1;i<argc;i++)fprintf(stdout," %s",GET_ARGV(i).toString().c_str());
 }
 
 BUILD_FUNC_SIGN(println)
