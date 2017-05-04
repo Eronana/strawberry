@@ -39,7 +39,7 @@ pop
 label_0:
 ; check expression
 load 5
-push 100000
+push 1000000
 less
 istrue
 jmp label_1

@@ -4,7 +4,7 @@ var print=system.print;
 var scani=system.scani;
 
 println("test GC");
-for(var i=0;i<100000;i++)
+for(var i=0;i<1000000;i++)
 {
     var x="hello"+"hello"+"hello"+"hello"+"hello";
     x=[[]];
