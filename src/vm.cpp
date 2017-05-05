@@ -1,6 +1,5 @@
 #include "vm.h"
 #include "memory.h"
-#include "buildin.h"
 #include "disassembler.h"
 #include <memory>
 #include <cstdio>
@@ -367,7 +366,7 @@ DEF_FUNC(CALL)
     else if(func.type==T_NATIVE_FUNCTION)
     {
         auto size=v_stack.size();
-        func.v_native_function(argc,v_stack,reg_ret);
+        func.v_native_function(argc,*this);
         v_stack.resize(size);
         v_stack.sub(argc-1);
         STOP=reg_ret;

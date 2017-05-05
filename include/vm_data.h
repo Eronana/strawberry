@@ -6,9 +6,9 @@
 #include <map>
 #include "stack.hpp"
 using namespace std;
+class VirtualMachine;
+#define NATIVE_FUNCTION_SIGN(NAME) void (NAME)(int argc, VirtualMachine &vm)
 
-#define NATIVE_FUNCTION_SIGN(NAME) void (NAME)(int argc, Stack<V_VALUE> &v_stack, V_VALUE &ret)
-#define GET_ARGV(N) v_stack.top(N)
 struct V_VALUE;
 typedef NATIVE_FUNCTION_SIGN(*NATIVE_FUNCTION_TYPE);
 

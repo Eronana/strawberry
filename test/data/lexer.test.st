@@ -10,6 +10,7 @@ var func=function(a,b)
     return a+b;
 };
 println("1+2="+func(1,2));
+system.exit();
 var fib=function(n)
 {
     if(n>=2)return fib(n-1)+fib(n-2);

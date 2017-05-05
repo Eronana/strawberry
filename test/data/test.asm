@@ -47,6 +47,12 @@ add
 load_global 2
 call 1
 pop
+load_global 0
+set_this
+push "exit"
+object_get
+call 0
+pop
 new_array
 load 6
 array_push

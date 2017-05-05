@@ -3,6 +3,7 @@
 
 #include "vm_opcode.h"
 #include "vm_data.h"
+#include "buildin.h"
 #include "codedata.h"
 #include "stack.hpp"
 #include <memory>
@@ -15,6 +16,9 @@ using namespace std;
 #define DECL_FUNC(NAME,LEN) void GET_FUNC_NAME(NAME)();
 #define GET_LIST_SIZE_F(NAME,LEN) 1+
 #define GET_LIST_SIZE() (OP_CODE(GET_LIST_SIZE_F)0)
+
+#define DECL_FRIEND_BUILDIN_FUNC_SIGN(NAME) friend BUILD_FUNC_SIGN(NAME);
+
 
 OPCODE get_ins(CODE code);
 int get_A(CODE code);
@@ -47,6 +51,7 @@ class VirtualMachine
     bool load(const char *filename);
     void run();
     void registerNativeFunction(const string &name,NATIVE_FUNCTION_TYPE func);
+    BUILDIN_FUNC_LIST(DECL_FRIEND_BUILDIN_FUNC_SIGN)
 };
 
 #endif
