@@ -269,12 +269,15 @@ bool gen_code()
             case OP_STORE_GLOBAL:
             case OP_LOAD:
             case OP_STORE:
+            case OP_LOAD_EXTERNAL:
+            case OP_STORE_EXTERNAL:
             case OP_ADDSP:
             case OP_SUBSP:
             case OP_CALL:
                 if(int_opnd==-1)int_opnd=atoi(x.opnd.c_str());
                 add_int32(int_opnd);
                 break;
+            case OP_CREATE_FUNCTION:
             case OP_JMP:
                 jmp_table.push_back({code.size(),labels[x.opnd]});
                 add_int32(0);

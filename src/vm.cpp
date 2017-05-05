@@ -61,6 +61,16 @@ DEF_FUNC(STORE)
     v_stack[get_int32()+l_stack]=STOP;
 }
 
+DEF_FUNC(LOAD_EXTERNAL)
+{
+    v_stack.push((*v_external.v_array)[get_int32()]);
+}
+    
+DEF_FUNC(STORE_EXTERNAL)
+{
+    (*v_external.v_array)[get_int32()]=STOP;
+}
+
 DEF_FUNC(NPUSH)
 {
     v_stack.add();
@@ -117,6 +127,13 @@ DEF_FUNC(NEW_OBJECT)
     STOP.type=T_OBJECT;
     STOP.v_object=newObject();
     reg_this=STOP;
+}
+
+DEF_FUNC(CREATE_FUNCTION)
+{
+    ARRAY_TYPE external=STOP.v_array;
+    STOP.type=T_FUNCTION;
+    STOP.v_function={get_int32(),external};
 }
 
 DEF_FUNC(SET_THIS)
@@ -340,19 +357,21 @@ DEF_FUNC(CALL)
     V_VALUE func=SPOP;
     if(func.type==T_FUNCTION)
     {
-        stack_frame.push({l_stack,argc,ip});
+        stack_frame.push({l_stack,argc,next_ip});
         l_stack=v_stack.size();
-        ip=func.v_function;
+        v_external.type=T_ARRAY;
+        v_external.v_array=func.v_function.external;
+        ip=func.v_function.func;
         KEEP_INS;
     }
     else if(func.type==T_NATIVE_FUNCTION)
     {
-        reg_ret.setNull();
         auto size=v_stack.size();
         func.v_native_function(argc,v_stack,reg_ret);
         v_stack.resize(size);
         v_stack.sub(argc-1);
         STOP=reg_ret;
+        reg_ret.setNull();
     }
 }
 
@@ -379,6 +398,7 @@ VirtualMachine::VirtualMachine()
     setRoot(&v_stack);
     addExtraRoot(&reg_this);
     addExtraRoot(&reg_ret);
+    addExtraRoot(&v_external);
 }
 bool VirtualMachine::load(const char *filename)
 {

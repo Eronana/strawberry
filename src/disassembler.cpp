@@ -83,10 +83,14 @@ void discode(CODE &op,CodeData &code_data,FILE *out)
         case OP_STORE_GLOBAL:
         case OP_LOAD:
         case OP_STORE:
+        case OP_LOAD_EXTERNAL:
+        case OP_STORE_EXTERNAL:
+        case OP_CREATE_FUNCTION:
         case OP_ADDSP:
         case OP_SUBSP:
         case OP_CALL:
         case OP_JMP:
+
             fprintf(out,"%s %d\n",op_name[op],get_int32(&op));
             break;
         default:

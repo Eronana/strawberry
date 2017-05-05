@@ -11,7 +11,7 @@ using namespace std;
 #define GET_ARGV(N) v_stack.top(N)
 struct V_VALUE;
 typedef NATIVE_FUNCTION_SIGN(*NATIVE_FUNCTION_TYPE);
-typedef int FUNCTION_TYPE;
+
 typedef int NULL_TYPE;
 typedef int BOOL_TYPE;
 typedef int INT_TYPE;
@@ -21,9 +21,13 @@ typedef vector<V_VALUE> ARRAY_OTYPE;
 typedef map<string,V_VALUE> OBJECT_OTYPE;
 
 typedef STRING_OTYPE *STRING_TYPE;
-typedef ARRAY_OTYPE*ARRAY_TYPE;
+typedef ARRAY_OTYPE *ARRAY_TYPE;
 typedef OBJECT_OTYPE *OBJECT_TYPE;
-
+struct FUNCTION_TYPE
+{
+    int func;
+    ARRAY_TYPE external;
+};
 typedef unsigned char BYTE;
 typedef BYTE CODE;
 enum DATATYPE

@@ -11,7 +11,8 @@
 
 DEF_AST_METHOD(Literal,AST_CHECK)
 {
-    if(token.type==TOKEN_IDENTIFIER&&Symbol::isEmpty(symbol->lookup(token.raw)))
+    int allowIndex;
+    if(token.type==TOKEN_IDENTIFIER&&symbol->lookup(token.raw,allowIndex)==ST_EMPTY)
         CHECK_ERROR(token,"use of undeclared identifier");
 }
 

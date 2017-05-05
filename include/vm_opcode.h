@@ -15,6 +15,12 @@ load a
 store a
     local[a]=st.pop()
 
+load_external a
+    st.push(external[a])
+
+store_external a
+    external[a]=st.pop()
+
 push a
     st.push(a)
 
@@ -26,6 +32,9 @@ new_array
 
 new_object
     st.push(new Object)
+
+create_function a
+    create function
 
 set_this
     reg_this=st.pop()
@@ -136,6 +145,8 @@ T(LOAD_GLOBAL,5)\
 T(STORE_GLOBAL,5)\
 T(LOAD,5)\
 T(STORE,5)\
+T(LOAD_EXTERNAL,5)\
+T(STORE_EXTERNAL,5)\
 T(NPUSH,1)\
 T(BPUSH,2)\
 T(IPUSH,5)\
@@ -144,6 +155,7 @@ T(SPUSH,5)\
 T(POP,1)\
 T(NEW_ARRAY,1)\
 T(NEW_OBJECT,1)\
+T(CREATE_FUNCTION,5)\
 T(SET_THIS,1)\
 T(RESET_THIS,1)\
 T(ARRAY_PUSH,1)\

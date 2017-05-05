@@ -1,19 +1,36 @@
 #include "ast.h"
 #include "ast_method.h"
+#include <cstdlib>
 
 #define CODEGEN(M) M->codeGen(symbol)
 #define AST_CODEGEN_ARRAY() {FOREACH(nodes){CODEGEN(x);}}
 
 
+bool genReturn;
+FILE *func_fp=NULL;
 template<typename T>
 void variantMethod(Symbol *symbol,T &identifier,const char *method)
 {
     string &id=GET_LITERAL(identifier).raw;
-    int allowIndex=symbol->lookup(id);
-    if(Symbol::isGlobal(allowIndex))
-        PRINTF("%s_global %d\n",method,Symbol::getGlobalIndex(allowIndex));
-    else
-        PRINTF("%s %d\n",method,allowIndex);
+    int allowIndex;
+    switch(symbol->lookup(id,allowIndex))
+    {
+        case ST_GLOBAL:
+            PRINTF("%s_global %d\n",method,allowIndex);
+            break;
+        case ST_LOCAL:
+            PRINTF("%s %d\n",method,allowIndex);
+            break;
+        case ST_EXTERNAL:
+            auto &func=*functionStack.top();
+            if(!func.ext_map.count(id))
+            {
+                func.ext_map[id]=func.ext_map.size();
+                func.ext_list.push_back(allowIndex);
+            }
+            PRINTF("%s_external %d\n",method,func.ext_map[id]);
+            break;
+    }
 }
 template<typename T>
 void storeVariant(Symbol *symbol,T &identifier)
@@ -100,12 +117,8 @@ DEF_AST_METHOD(CaseClauseList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(FormalParameterList,AST_CODEGEN) {}
 DEF_AST_METHOD(StatementList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(OperationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 
-DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) 
-{
-    AST_CODEGEN_ARRAY()
-    //PRINTF("pop\n");
-}
 
 
 DEF_AST_METHOD(Block,AST_CODEGEN)
@@ -499,12 +512,45 @@ DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
     CODEGEN(caseBlock);
     PRINTF("pop\n");
 }
+void copy_stream(FILE *dest,FILE *src)
+{
+    fseek(src,0,SEEK_SET);
+    for(int c;(c=fgetc(src))!=EOF;fputc(c,dest));
+    fclose(src);
+}
 DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {
     GET_SCOPE();
+    int funcLabel=nextLabel();
+    FunctionInfo func;
+    functionStack.push(&func);
+    FILE *bak=AST::fp;
+    FILE *tmp_fp=NULL;
+    if(!func_fp)AST::fp=func_fp=tmpfile();
+    else AST::fp=tmp_fp=tmpfile();
     PRINTF("; function expression\n");
-    PRINTF("addsp %d\n",symbol->localCount);
-    PRINTF("subsp %d\n",symbol->localCount);
+    PRINTF("label_%d:\n",funcLabel);
+    auto localCount=symbol->localCount;
+    if(localCount)PRINTF("addsp %d\n",symbol->localCount);
+    genReturn=false;
+    CODEGEN(block);
+    if(!genReturn)
+    {
+        PRINTF("load null\n");
+        PRINTF("ret\n");
+    }
+    if(localCount)PRINTF("subsp %d\n",symbol->localCount);
+    functionStack.pop();
+    if(tmp_fp)copy_stream(func_fp,tmp_fp);
+    AST::fp=bak;
+    PRINTF("new_array\n");
+
+    for(auto x:func.ext_list)
+    {
+        PRINTF("load %d\n",x);
+        PRINTF("array_push\n",x);
+    }
+    PRINTF("create_function label_%d\n",funcLabel);
 }
 
 DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
@@ -512,6 +558,7 @@ DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
     if(expr)CODEGEN(expr);
     else PRINTF("load null\n");
     PRINTF("ret\n");
+    genReturn=true;
 }
 
 
@@ -530,7 +577,14 @@ DEF_AST_METHOD(EmptyStatement,AST_CODEGEN){}
 DEF_AST_METHOD(Program,AST_CODEGEN)
 {
     GET_SCOPE();
-    PRINTF("addsp %d\n",symbol->localCount);
+    auto localCount=symbol->localCount;
+    if(localCount)PRINTF("addsp %d\n",symbol->localCount);
     CODEGEN(stmtList);
-    PRINTF("subsp %d\n",symbol->localCount);
+    if(localCount)PRINTF("subsp %d\n",symbol->localCount);
+    PRINTF("halt\n");
+    if(func_fp)
+    {
+        PRINTF("\n\n; functions\n");
+        copy_stream(AST::fp,func_fp);
+    }
 }

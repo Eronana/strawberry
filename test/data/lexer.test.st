@@ -3,6 +3,51 @@ var println=system.println;
 var print=system.print;
 var scani=system.scani;
 
+
+println("test function");
+var func=function(a,b)
+{
+    return a+b;
+};
+println("1+2="+func(1,2));
+var fib=function(n)
+{
+    if(n>=2)return fib(n-1)+fib(n-2);
+    return n;
+};
+
+println("fib 0 to 19");
+for(var i=0;i<20;i++)print(fib(i),"");
+println("");
+println("test closure");
+var counter=function(begin)
+{
+    return function(){return begin++;};
+};
+
+var c1=counter(100);
+var c2=counter(0);
+for(var i=0;i<20;i++)
+{
+    print(c1(),"");
+    print(c2(),", ");
+}
+println("\n------");
+var counter2=function(begin)
+{
+    return function(){return begin.counter++;};
+};
+var begin={"counter":0};
+var c3=counter2(begin);
+var c4=counter2(begin);
+for(var i=0;i<20;i++)
+{
+    print(c3(),"");
+    print(c4(),", ");
+}
+println("\n------");
+
+
 println("test GC");
 for(var i=0;i<1000000;i++)
 {
@@ -112,8 +157,8 @@ println("\nend");
 // TODO:
 // [x] fix switch
 // [x] gc
-// [ ] function
-// [ ] closure
+// [x] function
+// [x] closure
 
 /*
 for(var i=0;i<4;i++)println(a[i]);

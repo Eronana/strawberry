@@ -25,37 +25,40 @@ bool Symbol::insert(const std::string &str)
     allowIndex++;
     return true;
 }
+bool Symbol::insert(const std::string &str,int idx)
+{
+    if(!table.insert(std::make_pair(str,idx)).second)return false;
+    return true;
+}
 Symbol *Symbol::getParent()
 {
     return parent;
 }
-int Symbol::lookup(const std::string &str)
+SYMTYPE Symbol::lookup(const string &str,int &idx)
 {
     if(table.count(str))
     {
-        if(scope==SCOPE_GLOBAL)return ~table[str];
-        return table[str];
+        idx=table[str];
+        if(scope==SCOPE_GLOBAL)return ST_GLOBAL;
+        else return ST_LOCAL;
     }
-    if(parent)return parent->lookup(str);
-    return EMPTY_SYMBOL;
+    if(parent)
+    {
+        if(scope==SCOPE_FUNCTION)
+        {
+            auto ret=parent->lookup(str,idx);
+            if(ret!=ST_EMPTY)ret=ST_EXTERNAL;
+            return ret;
+        }
+        else return parent->lookup(str,idx);
+    }
+    return ST_EMPTY;
 }
 bool Symbol::matchScope(SCOPENAME s)
 {
     if(scope==s)return true;
     if(!parent||scope==SCOPE_FUNCTION)return false;
     return parent->matchScope(s);
-}
-bool Symbol::isEmpty(int index)
-{
-    return index==EMPTY_SYMBOL;
-}
-bool Symbol::isGlobal(int index)
-{
-    return index<0;
-}
-int Symbol::getGlobalIndex(int index)
-{
-    return ~index;
 }
 
 void Symbol::setParentCount(int count)

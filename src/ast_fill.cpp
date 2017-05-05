@@ -24,7 +24,10 @@ DEF_AST_METHOD(StatementList,AST_FILL) AST_FILL_ARRAY()
 
 DEF_AST_METHOD(FormalParameterList,AST_FILL)
 {
-    FOREACH(nodes)ADDSYMBOL(x);
+    for(int i=0;i<nodes.size();i++)
+    {
+        symbol->insert(((AST_NAME(Literal)*)nodes[i].get())->token.raw,~i);
+    }
 }
 
 DEF_AST_METHOD(VariableDeclarationList,AST_FILL) AST_FILL_ARRAY()

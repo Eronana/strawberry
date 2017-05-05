@@ -18,10 +18,17 @@ using namespace std;
 
 #define GET_SCOPE() symbol=scope_map[this].get()
 
+struct FunctionInfo
+{
+    map<string,int> ext_map;
+    vector<int> ext_list;
+};
+typedef map<int,int> EXT_VAR_TYPE;
 extern map<AST*,unique_ptr<Symbol>> scope_map;
 extern stack<int> continueStack;
 extern stack<int> breakStack;
 extern stack<int> defaultClauseStack;
+extern stack<FunctionInfo*> functionStack;
 extern int sp;
 extern int this_count;
 extern int next_label;

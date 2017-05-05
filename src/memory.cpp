@@ -58,6 +58,9 @@ void mark_value(V_VALUE &val)
         case T_OBJECT:
             if(mark_alive(val.v_object,T_OBJECT))for(auto &x:*val.v_object)mark_value(x.second);
             break;
+        case T_FUNCTION:
+            if(mark_alive(val.v_function.external,T_ARRAY))for(auto &x:*val.v_function.external)mark_value(x); 
+            break;
     }
 }
 

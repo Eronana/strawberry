@@ -16,6 +16,13 @@ enum SCOPENAME
     SCOPE_SWITCH,
     SCOPE_BLOCK
 };
+enum SYMTYPE
+{
+    ST_GLOBAL,
+    ST_EXTERNAL,
+    ST_LOCAL,
+    ST_EMPTY
+};
 class Symbol
 {
 private:
@@ -31,12 +38,10 @@ public:
     Symbol(Symbol *parent,SCOPENAME scope);
     void print();
     bool insert(const string &str);
-    int lookup(const string &str);
+    bool insert(const string &str,int idx);
+    SYMTYPE lookup(const string &str,int &idx);
     bool matchScope(SCOPENAME s);
     Symbol *getParent();
-    static bool isEmpty(int index);
-    static bool isGlobal(int index);
-    static int getGlobalIndex(int index);
     void setParentCount();
 };
 #endif
