@@ -543,8 +543,8 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
     functionStack.pop();
     if(tmp_fp)copy_stream(func_fp,tmp_fp);
     AST::fp=bak;
+    this_count++;
     PRINTF("new_array\n");
-
     for(auto x:func.ext_list)
     {
         PRINTF("load %d\n",x);

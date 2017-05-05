@@ -47,7 +47,7 @@ SYMTYPE Symbol::lookup(const string &str,int &idx)
         if(scope==SCOPE_FUNCTION)
         {
             auto ret=parent->lookup(str,idx);
-            if(ret!=ST_EMPTY)ret=ST_EXTERNAL;
+            if(ret!=ST_EMPTY&&ret!=ST_GLOBAL)ret=ST_EXTERNAL;
             return ret;
         }
         else return parent->lookup(str,idx);

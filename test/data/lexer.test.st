@@ -10,6 +10,19 @@ var func=function(a,b)
     return a+b;
 };
 println("1+2="+func(1,2));
+var People=function(name)
+{
+    return {
+        "say":function(s){println(name,"say:",s);},
+        "love":function(a,b){println(name,"say:",a,'love',b);},
+    };
+};
+var ming=People("小明");
+var hong=People("小红");
+ming.say("I am a SB");
+hong.say("I am a SB too");
+hong.love('小明','我');
+
 system.exit();
 var fib=function(n)
 {
