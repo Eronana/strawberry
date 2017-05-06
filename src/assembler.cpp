@@ -30,7 +30,7 @@ map<string,int> opcode={
 int get_asm_line(ifstream &stream,string &s)
 {
     string str;
-    if(!getline(stream,str,'\n'))return 0;
+    if(!getline(stream,str,'\n'))return -0x80000000;
     istringstream ss(str);
     getline(ss,s,';');
     if(s.empty())return 1+get_asm_line(stream,s);
@@ -184,7 +184,7 @@ bool load_asmfile(const char *filename)
     for(int lines=0;;)
     {
         int read_lines=get_asm_line(asms,line);
-        if(!read_lines)break;
+        if(read_lines<0)break;
         lines+=read_lines;
         int pos=line.find(' ');
         string oper=line.substr(0,pos);
