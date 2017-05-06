@@ -172,10 +172,12 @@ DEF_AST_METHOD(PostfixExpression,AST_CODEGEN)
     bool isIdentifier=is_identifier(expr);
     if(isIdentifier)loadVariant(symbol,expr);
     else CODEGEN(expr);
+    PRINTF("dup\n");
     if(GET_LITERAL(optr).type==TOKEN_INCREMENT)PRINTF("inc\n");
     else PRINTF("dec\n");
     if(isIdentifier)storeVariant(symbol,expr);
     else PRINTF("object_reset\n");
+    PRINTF("pop\n");
 }
 
 

@@ -477,7 +477,7 @@ void VirtualMachine::run()
     //printf("memory_table: %u\n",memory_table.size());
     //gc();printf("memory_table: %u\n",memory_table.size());
     
-    printf("STACK SIZE: %d\n",v_stack.size());
+    //printf("STACK SIZE: %d\n",v_stack.size());
 }
 
 void VirtualMachine::registerNativeFunction(const string &name,NATIVE_FUNCTION_TYPE func)
