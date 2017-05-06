@@ -342,7 +342,7 @@ DEF_FUNC(JMP)
 
 DEF_FUNC(CALL)
 {
-    call(get_int32(),SPOP);
+    call(get_int32());
 }
 
 DEF_FUNC(RET)
@@ -351,7 +351,7 @@ DEF_FUNC(RET)
     ip=stack_frame.top().ip;
     KEEP_INS;
     reg_ret=SPOP;
-    v_stack.sub(stack_frame.top().argc-1);
+    v_stack.sub(stack_frame.top().argc);
     STOP=reg_ret;
     stack_frame.pop();
 }
@@ -410,8 +410,9 @@ void VirtualMachine::push(const string &s)
     *STOP.v_string=s;
 }
 
-void VirtualMachine::call(int argc,const V_VALUE &func)
+void VirtualMachine::call(int argc)
 {
+    V_VALUE &func=v_stack.top(argc);
     if(func.type==T_FUNCTION)
     {
         stack_frame.push({l_stack,argc,next_ip});
@@ -426,7 +427,7 @@ void VirtualMachine::call(int argc,const V_VALUE &func)
         auto size=v_stack.size();
         func.v_native_function(argc,*this);
         v_stack.resize(size);
-        v_stack.sub(argc-1);
+        v_stack.sub(argc);
         STOP=reg_ret;
         reg_ret.setNull();
     }
@@ -445,7 +446,8 @@ extern map<void*,pair<int,bool>> memory_table;
 
 void VirtualMachine::callReturn(int argc,const V_VALUE &func)
 {
-    call(argc,func);
+    push(func);
+    call(argc);
     if(func.type==T_FUNCTION)runReturn();
 }
 

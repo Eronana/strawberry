@@ -4,6 +4,26 @@ var print=system.print;
 var scani=system.scani;
 var each=system.each;
 
+
+
+var cx=function(a)
+{
+    println("a:",a);
+    return function(b){
+        println("a:",a,"b:",b);
+        return function(){
+            println("a:",a,"b:",b);
+            return a++ + b++;
+        };
+    };
+};
+var cxx=cx(1000)(100);
+println(cxx());
+println(cxx());
+println(cxx());
+println(cxx());
+println("========");
+/*
 var eachArray=[1,2,3,"a",1.2345,true];
 var eachObject={
     "hello":"world",
@@ -15,12 +35,13 @@ var printx=function(x)
         println(x,k,v);
     };
 };
+println("each object");
+each(eachObject,printx("OBJECT: "));
+
 println("each array");
 each(eachArray,function(k,v){
     println(k,v);
 });
-println("each object");
-each(eachObject,printx("OBJECT: "));
 
 
 println("test function");
@@ -189,3 +210,4 @@ for(var i=2;i<1000;i++)
 }
 
 println("\nEND");
+*/

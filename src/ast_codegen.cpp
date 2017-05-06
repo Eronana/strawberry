@@ -109,6 +109,7 @@ DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
         PRINTF("; arugment %d\n",i);
         CODEGEN(nodes[i]);
     }
+    PRINTF("call %u\n",nodes.size());
 }
 
 DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
@@ -163,10 +164,8 @@ DEF_AST_METHOD(MemberExpressionPartList,AST_CODEGEN)
 
 DEF_AST_METHOD(CallExpression,AST_CODEGEN)
 {
-    CODEGEN(arguments);
     CODEGEN(expr);
-    int argc=((AST_NAME(ArgumentList)*)arguments.get())->nodes.size();
-    PRINTF("call %d\n",argc);
+    CODEGEN(arguments);
     if(exprPart)CODEGEN(exprPart);
 }
 
