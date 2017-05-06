@@ -446,7 +446,7 @@ extern map<void*,pair<int,bool>> memory_table;
 void VirtualMachine::callReturn(int argc,const V_VALUE &func)
 {
     call(argc,func);
-    runReturn();
+    if(func.type==T_FUNCTION)runReturn();
 }
 
 void VirtualMachine::runReturn()

@@ -9,15 +9,18 @@ var eachObject={
     "hello":"world",
     "fuck":123456,
 };
+var printx=function(x)
+{
+    return function(k,v){
+        println(x,k,v);
+    };
+};
 println("each array");
 each(eachArray,function(k,v){
     println(k,v);
 });
 println("each object");
-each(eachObject,function(k,v){
-    println(k,v);
-});
-
+each(eachObject,printx("OBJECT: "));
 
 
 println("test function");

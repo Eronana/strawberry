@@ -7,7 +7,6 @@
 
 
 bool genReturn;
-FILE *func_fp=NULL;
 template<typename T>
 void variantMethod(Symbol *symbol,T &identifier,const char *method)
 {
@@ -512,12 +511,8 @@ DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
     CODEGEN(caseBlock);
     PRINTF("pop\n");
 }
-void copy_stream(FILE *dest,FILE *src)
-{
-    fseek(src,0,SEEK_SET);
-    for(int c;(c=fgetc(src))!=EOF;fputc(c,dest));
-    fclose(src);
-}
+
+vector<FILE *> func_tmpfile;
 DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {
     GET_SCOPE();
@@ -525,9 +520,8 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
     FunctionInfo func;
     functionStack.push(&func);
     FILE *bak=AST::fp;
-    FILE *tmp_fp=NULL;
-    if(!func_fp)AST::fp=func_fp=tmpfile();
-    else AST::fp=tmp_fp=tmpfile();
+    FILE *tmp_fp=AST::fp=tmpfile();
+    func_tmpfile.push_back(tmp_fp);
     PRINTF("; function expression\n");
     PRINTF("label_%d:\n",funcLabel);
     auto localCount=symbol->localCount;
@@ -541,7 +535,6 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
     }
     if(localCount)PRINTF("subsp %d\n",symbol->localCount);
     functionStack.pop();
-    if(tmp_fp)copy_stream(func_fp,tmp_fp);
     AST::fp=bak;
     this_count++;
     PRINTF("new_array\n");
@@ -574,6 +567,13 @@ DEF_AST_METHOD(BreakStatement,AST_CODEGEN)
 
 DEF_AST_METHOD(EmptyStatement,AST_CODEGEN){}
 
+void copy_stream(FILE *dest,FILE *src)
+{
+    fseek(src,0,SEEK_SET);
+    for(int c;(c=fgetc(src))!=EOF;fputc(c,dest));
+    fclose(src);
+}
+
 DEF_AST_METHOD(Program,AST_CODEGEN)
 {
     GET_SCOPE();
@@ -581,10 +581,6 @@ DEF_AST_METHOD(Program,AST_CODEGEN)
     if(localCount)PRINTF("addsp %d\n",symbol->localCount);
     CODEGEN(stmtList);
     if(localCount)PRINTF("subsp %d\n",symbol->localCount);
-    PRINTF("halt\n");
-    if(func_fp)
-    {
-        PRINTF("\n\n; functions\n");
-        copy_stream(AST::fp,func_fp);
-    }
+    PRINTF("halt\n\n");
+    for(FILE *x:func_tmpfile)copy_stream(AST::fp,x);
 }
