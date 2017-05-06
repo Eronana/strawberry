@@ -2,6 +2,22 @@ var haha=(3*(4+5))<<2;
 var println=system.println;
 var print=system.print;
 var scani=system.scani;
+var each=system.each;
+
+var eachArray=[1,2,3,"a",1.2345,true];
+var eachObject={
+    "hello":"world",
+    "fuck":123456,
+};
+println("each array");
+each(eachArray,function(k,v){
+    println(k,v);
+});
+println("each object");
+each(eachObject,function(k,v){
+    println(k,v);
+});
+
 
 
 println("test function");
@@ -10,11 +26,14 @@ var func=function(a,b)
     return a+b;
 };
 println("1+2="+func(1,2));
+
+
+println("test closure");
 var People=function(name)
 {
     return {
         "say":function(s){println(name,"say:",s);},
-        "love":function(a,b){println(name,"say:",a,'love',b);},
+        "love":function(a,b){println(name,"say:",a+' love '+b);},
     };
 };
 var ming=People("小明");
@@ -23,7 +42,7 @@ ming.say("I am a SB");
 hong.say("I am a SB too");
 hong.love('小明','我');
 
-system.exit();
+
 var fib=function(n)
 {
     if(n>=2)return fib(n-1)+fib(n-2);
@@ -33,7 +52,6 @@ var fib=function(n)
 println("fib 0 to 19");
 for(var i=0;i<20;i++)print(fib(i),"");
 println("");
-println("test closure");
 var counter=function(begin)
 {
     return function(){return begin++;};
@@ -166,47 +184,5 @@ for(var i=2;i<1000;i++)
     for(j=2;j*j<=i;j++)if(i%j==0)break;
     if(j*j>i)print(i),print(" ");
 }
-println("\nend");
 
-// TODO:
-// [x] fix switch
-// [x] gc
-// [x] function
-// [x] closure
-
-/*
-for(var i=0;i<4;i++)println(a[i]);
-var len;
-var each=function(a,f){
-    for(var i=0;i<len(a);i++)f(a[i]);
-};
-var display;
-each(a,function(a){
-    display(a);
-});
-
-
-/*
-test
-/*nest comment
-/*
-nest*/
-asdgasdgasdg
-*/
-*/
-for(var i=0;i<keys.len;i++)
-{
-    var key=keys[i];
-    display(key);
-    display(b[key]);
-}
-var c;
-a+=b;
-c=b+c;
-a>>b;
-c<<=1;
-var d,f;
-d/=f;
-~a+c;
-display("END");
-*/
+println("\nEND");

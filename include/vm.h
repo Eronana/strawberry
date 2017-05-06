@@ -46,6 +46,18 @@ class VirtualMachine
     int8_t get_int8();
     int16_t get_int16();
     int32_t get_int32();
+    void push();
+    void push(const V_VALUE &a);
+    void push(bool a);
+    void push(int a);
+    void push(double a);
+    void push(const char *);
+    void push(const string &s);
+    void call(int argc,const V_VALUE &func);
+    void callReturn(int argc,const V_VALUE &func);
+    void runReturn();
+    void runStep();
+
   public:
     VirtualMachine();
     bool load(const char *filename);

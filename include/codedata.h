@@ -22,7 +22,7 @@ struct CodeConfig
 struct CodeData
 {
     CodeConfig config;
-    unique_ptr<NULL_TYPE[]> int_table;
+    unique_ptr<INT_TYPE[]> int_table;
     unique_ptr<FLOAT_TYPE[]> float_table;
     unique_ptr<char*[]> string_table;
     unique_ptr<char[]> string_raw;

@@ -2,3 +2,5 @@ build
 bin
 .depend
 .DS_Store
+test/data/test.asm
+test/data/test.bin

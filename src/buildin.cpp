@@ -110,3 +110,27 @@ BUILD_FUNC_SIGN(gc)
 {
     gc();
 }
+
+BUILD_FUNC_SIGN(each)
+{
+    auto &v=vm.v_stack.top();
+    auto &f=vm.v_stack.top(1);
+    if(v.type==T_ARRAY)
+    {
+        for(int i=0;i<v.v_array->size();i++)
+        {
+            vm.push((*v.v_array)[i]);
+            vm.push(i);
+            vm.callReturn(2,f);
+        }
+    }
+    else if(v.type==T_OBJECT)
+    {
+        for(auto &x:*v.v_object)
+        {
+            vm.push(x.first);
+            vm.push(x.second);
+            vm.callReturn(2,f);
+        }
+    }
+}

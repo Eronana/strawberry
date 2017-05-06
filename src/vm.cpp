@@ -72,38 +72,27 @@ DEF_FUNC(STORE_EXTERNAL)
 
 DEF_FUNC(NPUSH)
 {
-    v_stack.add();
-    STOP.setNull();
+    push();
 }
-
 
 DEF_FUNC(BPUSH)
 {
-    v_stack.add();
-    STOP.type=T_BOOL;
-    STOP.v_bool=get_int8();
+    push(bool(get_int8()));
 }
 
 DEF_FUNC(IPUSH)
 {
-    v_stack.add();
-    STOP.type=T_INT;
-    STOP.v_int=code_data.int_table[get_int32()];
+    push(code_data.int_table[get_int32()]);
 }
 
 DEF_FUNC(FPUSH)
 {
-    v_stack.add();
-    STOP.type=T_FLOAT;
-    STOP.v_float=code_data.float_table[get_int32()];
+    push(code_data.float_table[get_int32()]);
 }
 
 DEF_FUNC(SPUSH)
 {
-    v_stack.add();
-    STOP.type=T_STRING;
-    STOP.v_string=newString();
-    *STOP.v_string=code_data.string_table[get_int32()];
+    push(code_data.string_table[get_int32()]);
 }
 
 DEF_FUNC(POP)
@@ -163,6 +152,7 @@ DEF_FUNC(OBJECT_GET)
         array_last_index=STOP.toInt();
         STOP=(*reg_this.v_array)[array_last_index];
     }
+    else STOP.setNull();
 }
 
 DEF_FUNC(OBJECT_SET)
@@ -344,34 +334,15 @@ DEF_FUNC(SUBSP)
     v_stack.sub(get_int32());
 }
 
-
 DEF_FUNC(JMP)
 {
     ip=get_int32();
     KEEP_INS;
 }
+
 DEF_FUNC(CALL)
 {
-    int8_t argc=get_int8();
-    V_VALUE func=SPOP;
-    if(func.type==T_FUNCTION)
-    {
-        stack_frame.push({l_stack,argc,next_ip});
-        l_stack=v_stack.size();
-        v_external.type=T_ARRAY;
-        v_external.v_array=func.v_function.external;
-        ip=func.v_function.func;
-        KEEP_INS;
-    }
-    else if(func.type==T_NATIVE_FUNCTION)
-    {
-        auto size=v_stack.size();
-        func.v_native_function(argc,*this);
-        v_stack.resize(size);
-        v_stack.sub(argc-1);
-        STOP=reg_ret;
-        reg_ret.setNull();
-    }
+    call(get_int32(),SPOP);
 }
 
 DEF_FUNC(RET)
@@ -399,6 +370,68 @@ VirtualMachine::VirtualMachine()
     addExtraRoot(&reg_ret);
     addExtraRoot(&v_external);
 }
+
+void VirtualMachine::push()
+{
+    v_stack.add();
+    STOP.setNull();
+}
+void VirtualMachine::push(const V_VALUE &a)
+{
+    v_stack.push(a);
+}
+void VirtualMachine::push(bool a)
+{
+    v_stack.add();
+    STOP.type=T_BOOL;
+    STOP.v_bool=a;
+}
+void VirtualMachine::push(int a)
+{
+    v_stack.add();
+    STOP.type=T_INT;
+    STOP.v_int=a;
+}
+void VirtualMachine::push(double a)
+{
+    v_stack.add();
+    STOP.type=T_FLOAT;
+    STOP.v_float=a;
+}
+void VirtualMachine::push(const char *s)
+{
+    push(string(s));
+}
+void VirtualMachine::push(const string &s)
+{
+    v_stack.add();
+    STOP.type=T_STRING;
+    STOP.v_string=newString();
+    *STOP.v_string=s;
+}
+
+void VirtualMachine::call(int argc,const V_VALUE &func)
+{
+    if(func.type==T_FUNCTION)
+    {
+        stack_frame.push({l_stack,argc,next_ip});
+        l_stack=v_stack.size();
+        v_external.type=T_ARRAY;
+        v_external.v_array=func.v_function.external;
+        ip=func.v_function.func;
+        KEEP_INS;
+    }
+    else if(func.type==T_NATIVE_FUNCTION)
+    {
+        auto size=v_stack.size();
+        func.v_native_function(argc,*this);
+        v_stack.resize(size);
+        v_stack.sub(argc-1);
+        STOP=reg_ret;
+        reg_ret.setNull();
+    }
+}
+
 bool VirtualMachine::load(const char *filename)
 {
     if(!code_data.load(filename))return false;
@@ -409,25 +442,39 @@ bool VirtualMachine::load(const char *filename)
     return true;
 }
 extern map<void*,pair<int,bool>> memory_table;
+
+void VirtualMachine::callReturn(int argc,const V_VALUE &func)
+{
+    call(argc,func);
+    runReturn();
+}
+
+void VirtualMachine::runReturn()
+{
+    while(CUR_INS!=OP_RET)runStep();
+    runStep();
+}
+void VirtualMachine::runStep()
+{
+    //discode(CUR_INS,code_data,stdout);
+    //continue;
+    next_ip=ip+CUR_INS_LEN;
+    if(CUR_INS>=0&&CUR_INS<=OP_HALT)(this->*op_func[CUR_INS])();
+    else printf("Unknow instructor: %d\n",CUR_INS);
+    //printf("STACK SIZE: %d\n",v_stack.size());
+    //puts("-----------------");
+    ip=next_ip;
+}
 void VirtualMachine::run()
 {
     unsigned int t=clock();
-    for(ip=code_data.config.entry_point;
-        ip>=0&&ip<code_data.config.code_raw_size;
-        ip=next_ip)
-    {
-        //discode(CUR_INS,code_data,stdout);
-        //continue;
-        next_ip=ip+CUR_INS_LEN;
-        if(CUR_INS==OP_HALT)break;
-        if(CUR_INS>=0&&CUR_INS<=OP_HALT)(this->*op_func[CUR_INS])();
-        else printf("Unknow instructor: %d\n",CUR_INS);
-        //printf("STACK SIZE: %d\n",v_stack.size());
-        //puts("-----------------");
-    }
+    ip=code_data.config.entry_point;
+    int code_raw_size=code_data.config.code_raw_size;
+    while(ip>=0&&ip<code_raw_size&&CUR_INS!=OP_HALT)runStep();
+    printf("halt in %lu clocks\n",clock()-t);
     //printf("memory_table: %u\n",memory_table.size());
     //gc();printf("memory_table: %u\n",memory_table.size());
-    printf("halt in %lu clocks\n",clock()-t);
+    
     //printf("STACK SIZE: %d\n",v_stack.size());
 }
 
@@ -436,3 +483,5 @@ void VirtualMachine::registerNativeFunction(const string &name,NATIVE_FUNCTION_T
     reg_system[name].type=T_NATIVE_FUNCTION;
     reg_system[name].v_native_function=func;
 }
+
+
