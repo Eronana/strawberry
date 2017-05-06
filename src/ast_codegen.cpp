@@ -7,10 +7,8 @@
 
 
 bool genReturn;
-template<typename T>
-void variantMethod(Symbol *symbol,T &identifier,const char *method)
+void variantMethod(Symbol *symbol,const string &id,const char *method)
 {
-    string &id=GET_LITERAL(identifier).raw;
     int allowIndex;
     switch(symbol->lookup(id,allowIndex))
     {
@@ -25,7 +23,7 @@ void variantMethod(Symbol *symbol,T &identifier,const char *method)
             if(!func.ext_map.count(id))
             {
                 func.ext_map[id]=func.ext_map.size();
-                func.ext_list.push_back(allowIndex);
+                func.ext_list.push_back(id);
             }
             PRINTF("%s_external %d\n",method,func.ext_map[id]);
             break;
@@ -34,12 +32,12 @@ void variantMethod(Symbol *symbol,T &identifier,const char *method)
 template<typename T>
 void storeVariant(Symbol *symbol,T &identifier)
 {
-    variantMethod(symbol,identifier,"store");
+    variantMethod(symbol,GET_LITERAL(identifier).raw,"store");
 }
 template<typename T>
 void loadVariant(Symbol *symbol,T &identifier)
 {
-    variantMethod(symbol,identifier,"load");
+    variantMethod(symbol,GET_LITERAL(identifier).raw,"load");
 }
 bool is_identifier(const unique_ptr<AST> &expr)
 {
@@ -514,6 +512,7 @@ DEF_AST_METHOD(SwitchStatement,AST_CODEGEN)
 vector<FILE *> func_tmpfile;
 DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 {
+    auto symbol_bak=symbol;
     GET_SCOPE();
     int funcLabel=nextLabel();
     FunctionInfo func;
@@ -537,10 +536,10 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
     AST::fp=bak;
     this_count++;
     PRINTF("new_array\n");
-    for(auto x:func.ext_list)
+    for(auto &x:func.ext_list)
     {
-        PRINTF("load %d\n",x);
-        PRINTF("array_push\n",x);
+        variantMethod(symbol_bak,x,"load");
+        PRINTF("array_push\n");
     }
     PRINTF("create_function label_%d\n",funcLabel);
 }

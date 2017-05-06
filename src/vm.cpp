@@ -444,11 +444,11 @@ bool VirtualMachine::load(const char *filename)
 }
 extern map<void*,pair<int,bool>> memory_table;
 
-void VirtualMachine::callReturn(int argc,const V_VALUE &func)
+void VirtualMachine::callReturn(int argc)
 {
-    push(func);
+    DATATYPE type=v_stack.top(argc).type;
     call(argc);
-    if(func.type==T_FUNCTION)runReturn();
+    if(type==T_FUNCTION)runReturn();
 }
 
 void VirtualMachine::runReturn()
@@ -477,7 +477,7 @@ void VirtualMachine::run()
     //printf("memory_table: %u\n",memory_table.size());
     //gc();printf("memory_table: %u\n",memory_table.size());
     
-    //printf("STACK SIZE: %d\n",v_stack.size());
+    printf("STACK SIZE: %d\n",v_stack.size());
 }
 
 void VirtualMachine::registerNativeFunction(const string &name,NATIVE_FUNCTION_TYPE func)

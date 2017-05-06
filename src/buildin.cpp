@@ -119,18 +119,20 @@ BUILD_FUNC_SIGN(each)
     {
         for(int i=0;i<v.v_array->size();i++)
         {
+            vm.push(f);
             vm.push((*v.v_array)[i]);
             vm.push(i);
-            vm.callReturn(2,f);
+            vm.callReturn(2);
         }
     }
     else if(v.type==T_OBJECT)
     {
         for(auto &x:*v.v_object)
         {
+            vm.push(f);
             vm.push(x.first);
             vm.push(x.second);
-            vm.callReturn(2,f);
+            vm.callReturn(2);
         }
     }
 }

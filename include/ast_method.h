@@ -21,7 +21,7 @@ using namespace std;
 struct FunctionInfo
 {
     map<string,int> ext_map;
-    vector<int> ext_list;
+    vector<string> ext_list;
 };
 typedef map<int,int> EXT_VAR_TYPE;
 extern map<AST*,unique_ptr<Symbol>> scope_map;

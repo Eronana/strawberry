@@ -1,4 +1,3 @@
-var haha=(3*(4+5))<<2;
 var println=system.println;
 var print=system.print;
 var scani=system.scani;
@@ -23,7 +22,16 @@ println(cxx());
 println(cxx());
 println(cxx());
 println("========");
-/*
+
+
+println("test function");
+var func=function(a,b)
+{
+    return a+b;
+};
+println("1+2="+func(1,2));
+
+
 var eachArray=[1,2,3,"a",1.2345,true];
 var eachObject={
     "hello":"world",
@@ -35,6 +43,7 @@ var printx=function(x)
         println(x,k,v);
     };
 };
+
 println("each object");
 each(eachObject,printx("OBJECT: "));
 
@@ -44,12 +53,7 @@ each(eachArray,function(k,v){
 });
 
 
-println("test function");
-var func=function(a,b)
-{
-    return a+b;
-};
-println("1+2="+func(1,2));
+
 
 
 println("test closure");
@@ -119,7 +123,7 @@ var t2=t||f;
 var t3=!t;
 var t4=!f;
 println(t,f,t1,t2,t3,t4);
-
+var haha=(3*(4+5))<<2;
 println("haha: "+haha);
 haha%=7;
 println("haha mo 7: "+haha);
@@ -210,4 +214,3 @@ for(var i=2;i<1000;i++)
 }
 
 println("\nEND");
-*/

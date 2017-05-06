@@ -54,7 +54,7 @@ class VirtualMachine
     void push(const char *);
     void push(const string &s);
     void call(int argc);
-    void callReturn(int argc,const V_VALUE &func);
+    void callReturn(int argc);
     void runReturn();
     void runStep();
 
