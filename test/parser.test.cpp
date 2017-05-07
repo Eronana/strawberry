@@ -2,7 +2,6 @@
 #include "lexer.h"
 #include "exception.h"
 #include "ast_method.h"
-#include <cstdio>
 
 #define TEST_SOURCE_FILE "test/data/test.st"
 
@@ -26,7 +25,6 @@ int main(int argc,char *argv[])
         puts("Parsing successed!\nResult:");
         astMethodInit();
         ast->print();
-        fclose(fp);
     }
     catch(Exception &e)
     {
