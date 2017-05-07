@@ -5,6 +5,7 @@
 #include "vm.h"
 #include "assembler.h"
 #include "disassembler.h"
+#include <cstring>
 
 #define GETOPT(S) get_option(argc,argv,S)
 #define SETOUT(S) {if(!out)out=S;}
