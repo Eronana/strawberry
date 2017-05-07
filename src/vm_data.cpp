@@ -234,6 +234,9 @@ bool V_VALUE::operator==(const V_VALUE &rhs) const
             return *v_object==*rhs.v_object;
         case T_NATIVE_FUNCTION:
             return v_native_function==rhs.v_native_function;
+        case T_FUNCTION:
+            return v_function.func==rhs.v_function.func&&
+                v_function.external==rhs.v_function.external;
     }
 }
 bool V_VALUE::operator!=(const V_VALUE &rhs) const

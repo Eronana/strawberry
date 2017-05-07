@@ -61,6 +61,8 @@ void mark_value(V_VALUE &val)
         case T_FUNCTION:
             if(mark_alive(val.v_function.external,T_ARRAY))for(auto &x:*val.v_function.external)mark_value(x); 
             break;
+        default:
+            break;
     }
 }
 
@@ -96,6 +98,8 @@ void sweep()
                 break;
             case T_OBJECT:
                 delete reinterpret_cast<OBJECT_TYPE>(iter->first);
+                break;
+            default:
                 break;
         }
         memory_table.erase(iter);

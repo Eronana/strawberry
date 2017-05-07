@@ -148,6 +148,8 @@ bool get_opnd(const string &s,int &v)
             if(!labels.count(s))return false;
             v=labels[s];
             break;
+        default:
+            break;
     }
     return true;
 }

@@ -19,6 +19,7 @@ void variantMethod(Symbol *symbol,const string &id,const char *method)
             PRINTF("%s %d\n",method,allowIndex);
             break;
         case ST_EXTERNAL:
+        {
             auto &func=*functionStack.top();
             if(!func.ext_map.count(id))
             {
@@ -26,6 +27,9 @@ void variantMethod(Symbol *symbol,const string &id,const char *method)
                 func.ext_list.push_back(id);
             }
             PRINTF("%s_external %d\n",method,func.ext_map[id]);
+            break;
+        }
+        default:
             break;
     }
 }
@@ -107,7 +111,7 @@ DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
         PRINTF("; arugment %d\n",i);
         CODEGEN(nodes[i]);
     }
-    PRINTF("call %u\n",nodes.size());
+    PRINTF("call %lu\n",nodes.size());
 }
 
 DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
@@ -277,6 +281,8 @@ DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
         case TOKEN_INEQUAL:
             PRINTF("ieq\n");
             break;
+        default:
+            break;
     }
 }
 
@@ -350,6 +356,8 @@ DEF_AST_METHOD(AssignmentExpression,AST_CODEGEN)
             break;
         case TOKEN_BITWISE_OR_ASSIGN:
             PRINTF("or\n");
+            break;
+        default:
             break;
     }
     if(isIdentifier)storeVariant(symbol,expr);

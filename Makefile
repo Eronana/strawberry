@@ -9,7 +9,7 @@ TARGET := $(BINDIR)/$(PROJECTNAME)
 
 SOURCES := $(shell find $(SRCDIR) -name *.cpp)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.cpp=.o))
-CFLAGS := -Wall -O2 -std=c++11
+CFLAGS := -O2 -std=c++11
 CCC := $(CC) $(CFLAGS) -I $(INCDIR)
 $(TARGET): $(OBJECTS)
 	@echo " Linking..."

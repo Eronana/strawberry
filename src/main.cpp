@@ -10,17 +10,24 @@
 #define GETOPT(S) get_option(argc,argv,S)
 #define SETOUT(S) {if(!out)out=S;}
 
-int get_option(int argc,char *argv[],char *option)
+int get_option(int argc,char *argv[],const char *option)
 {
     for(int i=2;i<argc;i++)if(argv[i][0]=='-'&&!strcmp(argv[i]+1,option))return i;
     return 0;
 }
+
+const char *tmpname()
+{
+    static char s[] = "XXXXXX";
+    mkstemp(s);
+    return s;
+}
 int main(int argc,char *argv[])
 {
     char *in=argv[1];
-    char *out=NULL;
+    const char *out=NULL;
     int opt;
-    if(opt=GETOPT("o"))out=argv[opt+1];
+    if((opt=GETOPT("o")))out=argv[opt+1];
     bool s=GETOPT("s"),x=GETOPT("x"),c=GETOPT("c"),d=GETOPT("d");
 
     if(c)
@@ -43,7 +50,7 @@ int main(int argc,char *argv[])
     }
     if(s)SETOUT("out.asm")
     else if(x) SETOUT("out.bin")
-    else SETOUT(tmpnam(NULL))
+    else SETOUT(tmpname())
     Parser parser(lexer);
     AST_PTR ast;
     try
@@ -55,7 +62,7 @@ int main(int argc,char *argv[])
 
         const char *asm_out;
         if(!x)asm_out=out;
-        else asm_out=tmpnam(NULL);
+        else asm_out=tmpname();
         FILE *fp=fopen(asm_out,"w");
         AST::fp=fp;
         ast->codeGen(nullptr);
