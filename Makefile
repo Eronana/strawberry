@@ -31,7 +31,7 @@ $(BINDIR)/%.test: $(BUILDDIR)/%.test.o $(filter-out $(BUILDDIR)/main.o, $(OBJECT
 
 %.test: $(BINDIR)/%.test
 	$<
-assembler.test: parser.test
+assembler.test: codegen.test
 disassembler.test: assembler.test
 vm.test: assembler.test
 clean:

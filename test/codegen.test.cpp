@@ -7,7 +7,7 @@
 
 int main(int argc,char *argv[])
 {
-    puts("======[ test parser ]======");
+    puts("======[ test coeegen ]======");
     const char *file=TEST_SOURCE_FILE;
     if(argc==1)printf("default file: %s\n",file);
     else file=argv[1];
@@ -24,7 +24,11 @@ int main(int argc,char *argv[])
         ast=parser.parse();
         puts("Parsing successed!\nResult:");
         astMethodInit();
-        ast->print();
+        ast->fill(nullptr);
+        ast->check(nullptr);
+        FILE *fp=fopen("test/data/test.asm","w");
+        AST::fp=fp;
+        ast->codeGen(nullptr);
         fclose(fp);
     }
     catch(Exception &e)
