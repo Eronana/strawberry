@@ -11,6 +11,7 @@ SOURCES := $(shell find $(SRCDIR) -name *.cpp)
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.cpp=.o))
 CFLAGS := -O2 -std=c++11
 CCC := $(CC) $(CFLAGS) -I $(INCDIR)
+
 $(TARGET): $(OBJECTS)
 	@echo " Linking..."
 	@mkdir -p $(BINDIR)
@@ -24,7 +25,7 @@ $(BUILDDIR)/%.test.o: $(TESTDIR)/%.test.cpp
 	@mkdir -p $(BUILDDIR)
 	$(CCC) -c -o $@ $<
 
-$(BINDIR)/%.test: $(BUILDDIR)/%.test.o $(OBJECTS)
+$(BINDIR)/%.test: $(BUILDDIR)/%.test.o $(filter-out $(BUILDDIR)/main.o, $(OBJECTS))
 	@mkdir -p $(BINDIR)
 	$(CC) $^ -o $@
 

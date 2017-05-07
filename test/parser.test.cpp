@@ -3,7 +3,7 @@
 #include "exception.h"
 #include "ast_method.h"
 
-#define TEST_SOURCE_FILE "test/data/lexer.test.st"
+#define TEST_SOURCE_FILE "test/data/test.st"
 
 int main(int argc,char *argv[])
 {
