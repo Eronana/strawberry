@@ -21,7 +21,7 @@ struct Token
 class Lexer
 {
   private:
-    FILE *fp;
+    FILE *fp=NULL;
     Queue<char> lookhead_buffer;
     int line_number;
     int col_number;

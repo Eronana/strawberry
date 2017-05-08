@@ -43,7 +43,7 @@ class Parser
     typedef bool(Parser:: *PARSER_BOOL_FUNC)();
     typedef AST_PTR (Parser::*PARSER_AST_FUNC)();
 
-    Lexer lexer;
+    Lexer &lexer;
     vector<Token> token_buffer;
     int token_base;
     Token &lookHead(int index = 0);
