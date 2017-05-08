@@ -23,7 +23,7 @@ void variantMethod(Symbol *symbol,const string &id,const char *method)
             auto &func=*functionStack.top();
             if(!func.ext_map.count(id))
             {
-                func.ext_map[id]=func.ext_map.size();
+                func.ext_map[id]=func.ext_list.size();
                 func.ext_list.push_back(id);
             }
             PRINTF("%s_external %d\n",method,func.ext_map[id]);
