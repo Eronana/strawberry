@@ -26,63 +26,71 @@ int main(int argc,char *argv[])
 {
     char *in=argv[1];
     const char *out=NULL;
-    int opt;
-    if((opt=GETOPT("o")))out=argv[opt+1];
-    bool s=GETOPT("s"),x=GETOPT("x"),c=GETOPT("c"),d=GETOPT("d");
+    if(CodeData::check(in))
+    {
+        out=in;
+    }
+    else
+    {
+        int opt;
+        if((opt=GETOPT("o")))out=argv[opt+1];
+        bool s=GETOPT("s"),x=GETOPT("x"),c=GETOPT("c"),d=GETOPT("d");
 
-    if(c)
-    {
-        SETOUT("out.bin")
-        if(assemble(in,out))return 0;
-        return 1;
-    }
-    if(d)
-    {
-        SETOUT("out.asm")
-        if(disassemble(in,out))return 0;
-        return 1;
-    }
-    Lexer lexer;
-    if(!lexer.load(in))
-    {
-        fprintf(stderr,"cannot open %s\n",in);
-        return 1;
-    }
-    if(s)SETOUT("out.asm")
-    else if(x) SETOUT("out.bin")
-    else SETOUT(tmpname())
-    Parser parser(lexer);
-    AST_PTR ast;
-    try
-    {
-        ast=parser.parse();
-        astMethodInit();
-        ast->fill(nullptr);
-        ast->check(nullptr);
-
-        const char *asm_out;
-        if(!x)asm_out=out;
-        else asm_out=tmpname();
-        FILE *fp=fopen(asm_out,"w");
-        AST::fp=fp;
-        ast->codeGen(nullptr);
-        fclose(fp);
-        if(s)return 0;
-        int result=assemble(asm_out,out)?0:1;
-        if(x||result)
+        if(c)
         {
-            remove(asm_out);
-            return result;
+            SETOUT("out.bin")
+            if(assemble(in,out))return 0;
+            return 1;
         }
-    }
-    catch(Exception &e)
-    {
-        e.print(stderr);
-        return 1;
+        if(d)
+        {
+            SETOUT("out.asm")
+            if(disassemble(in,out))return 0;
+            return 1;
+        }
+        Lexer lexer;
+        if(!lexer.load(in))
+        {
+            fprintf(stderr,"cannot open %s\n",in);
+            return 1;
+        }
+        if(s)SETOUT("out.asm")
+        else if(x) SETOUT("out.bin")
+        else SETOUT(tmpname())
+        Parser parser(lexer);
+        AST_PTR ast;
+        try
+        {
+            ast=parser.parse();
+            astMethodInit();
+            ast->fill(nullptr);
+            ast->check(nullptr);
+
+            const char *asm_out;
+            if(!x)asm_out=out;
+            else asm_out=tmpname();
+            FILE *fp=fopen(asm_out,"w");
+            AST::fp=fp;
+            ast->codeGen(nullptr);
+            fclose(fp);
+            if(s)return 0;
+            int result=assemble(asm_out,out)?0:1;
+            if(x||result)
+            {
+                remove(asm_out);
+                return result;
+            }
+        }
+        catch(Exception &e)
+        {
+            e.print(stderr);
+            return 1;
+        }
+
     }
     VirtualMachine vm;
     if(!vm.load(out))printf("cannot load %s\n",out);
-    else remove(out);;
+    else if(in!=out)remove(out);;
     vm.run();
     return 0;
 }

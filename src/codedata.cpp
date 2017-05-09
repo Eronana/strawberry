@@ -1,5 +1,14 @@
 #include "codedata.h"
 using namespace std;
+bool CodeData::check(const char *filename)
+{
+    FILE *fp=fopen(filename,"rb");
+    if(!fp)return false;
+    uint32_t magic;
+    fread(&magic,sizeof(magic),1,fp);
+    fclose(fp);
+    return magic==HEADER_MAGIC;
+}
 bool CodeData::load(const char *filename)
 {
     FILE *fp=fopen(filename,"rb");

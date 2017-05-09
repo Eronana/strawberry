@@ -5,7 +5,7 @@
 #include <memory>
 #include "vm_data.h"
 using namespace std;
-#define HEADER_MAGIC 0x4D414552
+#define HEADER_MAGIC 0x414e5245
 
 struct CodeConfig
 {
@@ -29,6 +29,7 @@ struct CodeData
     unique_ptr<CODE[]> code_raw;
     bool load(const char *filename);
     bool load(FILE *fp);
+    static bool check(const char *filename);
 };
 
 bool write_code_data(const char *filename,int entry_point,vector<int> int_table_list,vector<FLOAT_TYPE> float_table_list,vector<string> string_table_list,vector<CODE> code);
