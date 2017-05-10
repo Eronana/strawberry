@@ -253,6 +253,7 @@ void V_VALUE::negative()
 {
     if(type==T_INT)v_int=-v_int;
     else if(type==T_FLOAT)v_float=-v_float;
+    else setNull();
 }
 
 void V_VALUE::positive()
