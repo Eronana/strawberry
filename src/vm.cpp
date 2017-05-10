@@ -12,15 +12,15 @@
 #define SKIP_INS next_ip+=op_length[NEXT_INS]
 #define KEEP_INS next_ip=ip
 const char *type_name[]={
-    "null",
-    "bool",
-    "int",
-    "float",
-    "string",
-    "array",
-    "object",
-    "native function",
-    "function"
+    "Null",
+    "Bool",
+    "Int",
+    "Float",
+    "String",
+    "Array",
+    "Object",
+    "Native Function",
+    "Function"
 };
 int8_t VirtualMachine::get_int8()
 {
