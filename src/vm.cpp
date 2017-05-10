@@ -64,7 +64,7 @@ DEF_FUNC(LOAD_EXTERNAL)
 {
     v_stack.push((*v_external.v_array)[get_int32()]);
 }
-    
+
 DEF_FUNC(STORE_EXTERNAL)
 {
     (*v_external.v_array)[get_int32()]=STOP;
@@ -141,18 +141,26 @@ DEF_FUNC(ARRAY_PUSH)
 
 DEF_FUNC(OBJECT_GET)
 {
-    if(reg_this.type==T_OBJECT)
+    switch(reg_this.type)
     {
-        array_last_index=-1;
-        object_last_key=STOP.toString();
-        STOP=(*reg_this.v_object)[object_last_key];
+        case T_STRING:
+            array_last_index=STOP.toInt();
+            STOP.type=T_STRING;
+            STOP.v_string=newString();
+            *STOP.v_string=(*reg_this.v_string)[array_last_index];
+            break;
+        case T_ARRAY:
+            array_last_index=STOP.toInt();
+            STOP=(*reg_this.v_array)[array_last_index];
+            break;
+        case T_OBJECT:
+            array_last_index=-1;
+            object_last_key=STOP.toString();
+            STOP=(*reg_this.v_object)[object_last_key];
+            break;
+        default:
+            STOP.setNull();
     }
-    else if(reg_this.type==T_ARRAY)
-    {
-        array_last_index=STOP.toInt();
-        STOP=(*reg_this.v_array)[array_last_index];
-    }
-    else STOP.setNull();
 }
 
 DEF_FUNC(OBJECT_SET)

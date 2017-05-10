@@ -5,24 +5,11 @@ var each=system.each;
 
 
 
-var cx=function(a)
-{
-    println("a:",a);
-    return function(b){
-        println("a:",a,"b:",b);
-        return function(){
-            println("a:",a,"b:",b);
-            return a++ + b++;
-        };
-    };
-};
-var cxx=cx(1000)(100);
-println(cxx());
-println(cxx());
-println(cxx());
-println(cxx());
-println("========");
-
+println("test string");
+var sa="0123456789";
+var sb=sa[0]+sa[8];
+var sc="0123"[0]+"abcd"[1];
+println(sb,sc);
 
 println("test function");
 var func=function(a,b)
@@ -69,6 +56,24 @@ var hong=People("小红");
 ming.say("I am a SB");
 hong.say("I am a SB too");
 hong.love('小明','我');
+
+var cx=function(a)
+{
+    println("a:",a);
+    return function(b){
+        println("a:",a,"b:",b);
+        return function(){
+            println("a:",a,"b:",b);
+            return a++ + b++;
+        };
+    };
+};
+var cxx=cx(1000)(100);
+println(cxx());
+println(cxx());
+println(cxx());
+println(cxx());
+println("========");
 
 
 var fib=function(n)
