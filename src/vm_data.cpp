@@ -59,6 +59,14 @@ V_VALUE &V_VALUE::operator*=(const V_VALUE &rhs)
         case T_FLOAT:
             v_float*=rhs.toFloat();
             break;
+        case T_STRING:
+            if(int t=rhs.toInt())
+            {
+                string s=*v_string;
+                while(--t)(*v_string)+=s;
+            }
+            else setNull();
+            break;
         default:
             setNull();
     }
