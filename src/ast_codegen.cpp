@@ -222,10 +222,28 @@ DEF_AST_METHOD(PrefixExpression,AST_CODEGEN)
 
 DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
 {
+    auto optype=GET_LITERAL(optr).type;
+    int label;
+    if(optype==TOKEN_LOGIC_AND)
+    {
+        label=nextLabel();
+        PRINTF("dup\n");
+        PRINTF("istrue\n");
+        PRINTF("jmp label_%d\n",label);
+        PRINTF("pop\n");
+    }
+    else if(optype==TOKEN_LOGIC_OR)
+    {
+        label=nextLabel();
+        PRINTF("dup\n");
+        PRINTF("isfalse\n");
+        PRINTF("jmp label_%d\n",label);
+        PRINTF("pop\n");
+    }
     bool isIdentifier=is_identifier(expr);
     if(isIdentifier)loadVariant(symbol,expr);
     else CODEGEN(expr);
-    switch(GET_LITERAL(optr).type)
+    switch(optype)
     {
         case TOKEN_MUL:
             PRINTF("mul\n");
@@ -251,12 +269,6 @@ DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
         case TOKEN_BITWISE_OR:
             PRINTF("bor\n");
             break;
-        case TOKEN_LOGIC_AND:
-            PRINTF("land\n");
-            break;
-        case TOKEN_LOGIC_OR:
-            PRINTF("lor\n");
-            break;
         case TOKEN_LEFT_SHIFT:
             PRINTF("shl\n");
             break;
@@ -280,6 +292,10 @@ DEF_AST_METHOD(BinaryOperationExpression,AST_CODEGEN)
             break;
         case TOKEN_INEQUAL:
             PRINTF("ieq\n");
+            break;
+        case TOKEN_LOGIC_AND:
+        case TOKEN_LOGIC_OR:
+            PRINTF("label_%d:\n",label);
             break;
         default:
             break;
