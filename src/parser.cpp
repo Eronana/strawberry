@@ -373,7 +373,7 @@ AST_PTR Parser::PrefixExpression()
     {
         DEF_AST_RET(PrefixExpression);
         ret->optr=Literal();
-        ret->expr=PostfixExpression();
+        ret->expr=PrefixExpression();
         RETURN_PTR;
     }
     else return PostfixExpression();
