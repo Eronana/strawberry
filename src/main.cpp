@@ -84,6 +84,8 @@ int main(int argc,char *argv[])
         catch(Exception &e)
         {
             e.print(stderr);
+            if(x)remove(asm_out);
+            if(in!=out)remove(out);
             return 1;
         }
 
@@ -94,3 +96,4 @@ int main(int argc,char *argv[])
     vm.run();
     return 0;
 }
+
