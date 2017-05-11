@@ -33,4 +33,4 @@ bin/strawberry xxx.asm -c
 - [ ] Dosc
 - [ ] Language specification
 - [ ] Graphical interface(OpenGL)
-- [ ] fix `||` and `&&`
+
