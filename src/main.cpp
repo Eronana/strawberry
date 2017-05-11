@@ -59,6 +59,7 @@ int main(int argc,char *argv[])
         else SETOUT(tmpname())
         Parser parser(lexer);
         AST_PTR ast;
+        const char *asm_out;
         try
         {
             ast=parser.parse();
@@ -66,7 +67,6 @@ int main(int argc,char *argv[])
             ast->fill(nullptr);
             ast->check(nullptr);
 
-            const char *asm_out;
             if(!x)asm_out=out;
             else asm_out=tmpname();
             FILE *fp=fopen(asm_out,"w");
