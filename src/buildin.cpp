@@ -50,6 +50,9 @@ BUILD_FUNC_SIGN(len)
         case T_OBJECT:
             vm.reg_ret.v_int=GET_ARGV(0).v_object->size();
             break;
+        case T_STRING:
+            vm.reg_ret.v_int=GET_ARGV(0).v_string->length();
+            break;
         default:
             vm.reg_ret.v_int=1;
     }
