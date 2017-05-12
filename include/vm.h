@@ -29,7 +29,8 @@ class VirtualMachine
   private:
     struct StackFrame
     {
-        int sp,argc,ip;
+        int sp,ip;
+        size_t size;
     };
     CodeData code_data;
     Stack<V_VALUE> v_stack;

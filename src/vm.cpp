@@ -358,8 +358,8 @@ DEF_FUNC(RET)
     l_stack=stack_frame.top().sp;
     ip=stack_frame.top().ip;
     KEEP_INS;
-    reg_ret=SPOP;
-    v_stack.sub(stack_frame.top().argc);
+    reg_ret=STOP;
+    v_stack.resize(stack_frame.top().size);
     STOP=reg_ret;
     stack_frame.pop();
 }
@@ -423,7 +423,7 @@ void VirtualMachine::call(int argc)
     V_VALUE &func=v_stack.top(argc);
     if(func.type==T_FUNCTION)
     {
-        stack_frame.push({l_stack,argc,next_ip});
+        stack_frame.push({l_stack,next_ip,v_stack.size()-argc});
         l_stack=v_stack.size();
         v_external.type=T_ARRAY;
         v_external.v_array=func.v_function.external;

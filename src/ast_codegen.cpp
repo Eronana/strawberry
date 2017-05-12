@@ -557,7 +557,7 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
         PRINTF("load null\n");
         PRINTF("ret\n");
     }
-    if(localCount)PRINTF("subsp %d\n",symbol->localCount);
+    // if(localCount)PRINTF("subsp %d\n",symbol->localCount);
     functionStack.pop();
     AST::fp=bak;
     this_count++;
