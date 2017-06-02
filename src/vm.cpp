@@ -44,7 +44,6 @@ DEF_FUNC(LOAD_GLOBAL)
     v_stack.push(v_stack[get_int32()]);
 }
 
-
 DEF_FUNC(STORE_GLOBAL)
 {
     v_stack[get_int32()]=STOP;
@@ -121,12 +120,19 @@ DEF_FUNC(CREATE_FUNCTION)
 {
     ARRAY_TYPE external=STOP.v_array;
     STOP.type=T_FUNCTION;
-    STOP.v_function={get_int32(),external};
+    auto prototype = newObject();
+    (*prototype)["__proto__"]=reg_system["prototypes"][string("Function")];
+    STOP.v_function={get_int32(),external,prototype};
 }
 
 DEF_FUNC(SET_THIS)
 {
     reg_this=SPOP;
+}
+
+DEF_FUNC(GET_THIS)
+{
+    v_stack.push(reg_this);
 }
 
 DEF_FUNC(RESET_THIS)
@@ -138,25 +144,83 @@ DEF_FUNC(ARRAY_PUSH)
 {
     reg_this.v_array->push_back(SPOP);
 }
+void object_get(const V_VALUE &obj, const string &key, V_VALUE &val);
+void object_get(OBJECT_TYPE obj, const string &key, V_VALUE &val)
+{
+    if(obj->count(key))val=(*obj)[key];
+    else if(obj->count("__proto__"))object_get((*obj)["__proto__"],key,val);
+    else val.setNull();
+}
 
+void object_get(const V_VALUE &obj, const string &key, V_VALUE &val)
+{
+    if(obj.type!=T_OBJECT)val.setNull();
+    else object_get(obj.v_object,key,val);
+}
+
+void object_set(const V_VALUE &obj, const string &key, V_VALUE &val)
+{
+    (*obj.v_object)[key]=val;
+}
+
+void VirtualMachine::object_proto_get(const string &proto,const string &key, V_VALUE &val)
+{
+    V_VALUE &prototypes=reg_system["prototypes"];
+    if(prototypes.type!=T_OBJECT)val.setNull();
+    else object_get(prototypes[proto],key,val);
+}
 DEF_FUNC(OBJECT_GET)
 {
     switch(reg_this.type)
     {
         case T_STRING:
+            if(STOP.type==T_STRING)
+            {
+                object_proto_get("String",STOP.toString(),STOP);
+                if(STOP.type!=T_NULL)break;
+            }
             array_last_index=STOP.toInt();
-            STOP.type=T_STRING;
-            STOP.v_string=newString();
-            *STOP.v_string=(*reg_this.v_string)[array_last_index];
+            if(array_last_index>=0&&array_last_index<reg_this.v_string->length())
+            {
+                STOP.type=T_STRING;
+                STOP.v_string=newString();
+                *STOP.v_string=(*reg_this.v_string)[array_last_index];
+            }
+            else STOP.setNull();
             break;
         case T_ARRAY:
+            if(STOP.type==T_STRING)
+            {
+                object_proto_get("Array",STOP.toString(),STOP);
+                if(STOP.type!=T_NULL)break;
+            }
             array_last_index=STOP.toInt();
-            STOP=(*reg_this.v_array)[array_last_index];
+            if(array_last_index>=0&&array_last_index<reg_this.v_array->size())STOP=(*reg_this.v_array)[array_last_index];
+            else STOP.setNull();
             break;
         case T_OBJECT:
             array_last_index=-1;
             object_last_key=STOP.toString();
-            STOP=(*reg_this.v_object)[object_last_key];
+            object_get(reg_this,object_last_key,STOP);
+            break;
+        case T_INT:
+            object_proto_get("Int",STOP.toString(),STOP);
+            break;
+        case T_FLOAT:
+            object_proto_get("Float",STOP.toString(),STOP);
+            break;
+        case T_BOOL:
+            object_proto_get("Bool",STOP.toString(),STOP);
+            break;
+        case T_FUNCTION:
+            if(reg_this.type==T_FUNCTION&&STOP.toString()=="prototype")
+            {
+                STOP.type=T_OBJECT;
+                STOP.v_object=reg_this.v_function.prototype;
+                break;
+            }
+        case T_NATIVE_FUNCTION:
+            object_proto_get("Function",STOP.toString(),STOP);
             break;
         default:
             STOP.setNull();
@@ -168,7 +232,7 @@ DEF_FUNC(OBJECT_SET)
     if(reg_this.type==T_OBJECT)
     {
         string key=SPOP.toString();
-        (*reg_this.v_object)[key]=STOP;
+        object_set(reg_this,key,STOP);
     }
     
     else if(reg_this.type==T_ARRAY)
@@ -176,12 +240,13 @@ DEF_FUNC(OBJECT_SET)
         int key=SPOP.toInt();
         (*reg_this.v_array)[key]=STOP;
     }
+    else STOP.setNull();
 }
 
 DEF_FUNC(OBJECT_RESET)
 {
     if(array_last_index!=-1)(*reg_this.v_array)[array_last_index]=STOP;
-    else(*reg_this.v_object)[object_last_key]=STOP;
+    else object_set(reg_this,object_last_key,STOP);
 }
 
 
@@ -370,6 +435,15 @@ DEF_FUNC(HALT)
 }
 
 #define REG_BUILDIN_FUNC(NAME) registerNativeFunction(#NAME,&GET_BUILDIN_FUNC_NAME(NAME));
+
+template<typename T>
+V_VALUE &add_object(T &obj, const string &key)
+{
+    obj[key].type=T_OBJECT;
+    obj[key].v_object=newObject();
+    return obj[key];
+}
+
 VirtualMachine::VirtualMachine()
 {
     BUILDIN_FUNC_LIST(REG_BUILDIN_FUNC)
@@ -377,6 +451,24 @@ VirtualMachine::VirtualMachine()
     addExtraRoot(&reg_this);
     addExtraRoot(&reg_ret);
     addExtraRoot(&v_external);
+
+    auto prototypes = add_object(reg_system,"prototypes");
+    auto Object = add_object(prototypes,"Object");
+    auto Array = add_object(prototypes,"Array");
+    auto String = add_object(prototypes,"String");
+    auto Number = add_object(prototypes,"Number");
+    auto Float = add_object(prototypes,"Float");
+    auto Int = add_object(prototypes,"Int");
+    auto Bool = add_object(prototypes,"Bool");
+    auto Function = add_object(prototypes,"Function");
+
+    object_set(Array,"__proto__",Object);
+    object_set(String,"__proto__",Object);
+    object_set(Number,"__proto__",Object);
+    object_set(Bool,"__proto__",Object);
+    object_set(Function,"__proto__",Object);
+    object_set(Float,"__proto__",Number);
+    object_set(Int,"__proto__",Number);
 }
 
 void VirtualMachine::push()
@@ -468,12 +560,14 @@ void VirtualMachine::runStep()
 {
     //discode(CUR_INS,code_data,stdout);
     //continue;
+    gc_enable=false;
     next_ip=ip+CUR_INS_LEN;
     if(CUR_INS>=0&&CUR_INS<=OP_HALT)(this->*op_func[CUR_INS])();
     else printf("Unknow instructor: %d\n",CUR_INS);
     //printf("STACK SIZE: %d\n",v_stack.size());
     //puts("-----------------");
     ip=next_ip;
+    gc_enable=true;
 }
 void VirtualMachine::run()
 {

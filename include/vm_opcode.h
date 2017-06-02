@@ -39,6 +39,9 @@ create_function a
 set_this
     reg_this=st.pop()
 
+get_this
+    st.push(reg_this)
+
 reset_this
     swap
     dup
@@ -157,6 +160,7 @@ T(NEW_ARRAY,1)\
 T(NEW_OBJECT,1)\
 T(CREATE_FUNCTION,5)\
 T(SET_THIS,1)\
+T(GET_THIS,1)\
 T(RESET_THIS,1)\
 T(ARRAY_PUSH,1)\
 T(OBJECT_GET,1)\

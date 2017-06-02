@@ -601,15 +601,22 @@ AST_PTR Parser::SwitchStatement()
     RETURN_PTR;
 }
 
+AST_PTR VirtualLiteral(const string &s)
+{
+    auto ret=unique_ptr<AST_NAME(Literal)>(new AST_NAME(Literal)({TOKEN_IDENTIFIER,0,0,s}));
+    RETURN_PTR;
+}
+
 AST_PTR Parser::FormalParameterList()
 {
-    if(!accept(TOKEN_IDENTIFIER))return nullptr;
     DEF_AST_RET(FormalParameterList);
-    do
+    if(accept(TOKEN_IDENTIFIER))do
     {
         if(!accept(TOKEN_IDENTIFIER))PARSER_ERROR("excepted a identifier");
         ret->nodes.push_back(Literal());
     }while(acceptEat(TOKEN_COMMA));
+    ret->nodes.push_back(VirtualLiteral("this"));
+    ret->nodes.push_back(VirtualLiteral("callee"));
     RETURN_PTR;
 }
 

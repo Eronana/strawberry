@@ -58,7 +58,7 @@ class VirtualMachine
     void callReturn(int argc);
     void runReturn();
     void runStep();
-
+    void object_proto_get(const string &proto,const string &key, V_VALUE &val);
   public:
     VirtualMachine();
     bool load(const char *filename);

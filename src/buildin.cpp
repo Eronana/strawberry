@@ -4,8 +4,8 @@
 
 BUILD_FUNC_SIGN(print)
 {
-    if(argc)fputs(GET_ARGV(0).toString().c_str(),stdout);
-    for(int i=1;i<argc;i++)fprintf(stdout," %s",GET_ARGV(i).toString().c_str());
+    if(ARGC)fputs(GET_ARGV(0).toString().c_str(),stdout);
+    for(int i=1;i<ARGC;i++)fprintf(stdout," %s",GET_ARGV(i).toString().c_str());
 }
 
 BUILD_FUNC_SIGN(println)
@@ -61,7 +61,7 @@ BUILD_FUNC_SIGN(len)
 BUILD_FUNC_SIGN(push)
 {
     if(GET_ARGV(0).type!=T_ARRAY)return;
-    for(int i=1;i<argc;i++)GET_ARGV(0).v_array->push_back(GET_ARGV(i));
+    for(int i=1;i<ARGC;i++)GET_ARGV(0).v_array->push_back(GET_ARGV(i));
     vm.reg_ret=GET_ARGV(0);
 }
 
@@ -116,16 +116,18 @@ BUILD_FUNC_SIGN(gc)
 
 BUILD_FUNC_SIGN(each)
 {
-    auto &v=vm.v_stack.top();
-    auto &f=vm.v_stack.top(1);
+    auto &v=GET_ARGV(0);
+    auto &f=GET_ARGV(1);
     if(v.type==T_ARRAY)
     {
         for(int i=0;i<v.v_array->size();i++)
         {
             vm.push(f);
+            vm.push(f); //callee
+            vm.push(vm.v_stack[0]); // this
             vm.push((*v.v_array)[i]);
             vm.push(i);
-            vm.callReturn(2);
+            vm.callReturn(4);
         }
     }
     else if(v.type==T_OBJECT)
@@ -133,9 +135,46 @@ BUILD_FUNC_SIGN(each)
         for(auto &x:*v.v_object)
         {
             vm.push(f);
+            vm.push(f); //callee
+            vm.push(vm.v_stack[0]); // this
             vm.push(x.first);
             vm.push(x.second);
-            vm.callReturn(2);
+            vm.callReturn(4);
         }
     }
+}
+
+BUILD_FUNC_SIGN(call)
+{
+    auto &_this=GET_ARGV(0);
+    auto &f=GET_ARGV(1);
+    vm.push(f); // function
+    vm.push(f); // callee
+    vm.push(_this); // this
+    for(int i=0;i<ARGC-2;i++)vm.push(GET_ARGV(ARGC+2));
+    vm.callReturn(ARGC);
+}
+
+BUILD_FUNC_SIGN(new)
+{
+    // puts("--------[ BUILD_FUNC_SIGN(new) ]--------");
+    // for(int i=0;i<ARGC;i++)puts(GET_ARGV(i).toString().c_str());
+    auto &f=GET_ARGV(0);
+    V_VALUE o;
+    o.type=T_OBJECT;
+    o.v_object=newObject();
+    o[string("__proto__")].type=T_OBJECT;
+    o[string("__proto__")].v_object=f.v_function.prototype;
+    o[string("constructor")]=f;
+    vm.push(f); // function
+    vm.push(f); // callee
+    vm.push(o); // this
+    for(int i=0;i<ARGC-1;i++)vm.push(GET_ARGV(ARGC+2));
+    vm.callReturn(ARGC);
+    vm.reg_ret=o;
+}
+BUILD_FUNC_SIGN(__this_new__)
+{
+    vm.push(GET_THIS());
+    GET_BUILDIN_FUNC_NAME(new)(argc+1,vm);
 }

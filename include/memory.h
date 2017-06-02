@@ -6,7 +6,7 @@
 #include "vm_data.h"
 
 const size_t MIN_GC_SIZE=1024;
-
+extern bool gc_enable;
 STRING_TYPE newString();
 ARRAY_TYPE newArray();
 OBJECT_TYPE newObject();

@@ -27,6 +27,7 @@ struct FUNCTION_TYPE
 {
     int func;
     ARRAY_TYPE external;
+    OBJECT_TYPE prototype;
 };
 typedef unsigned char BYTE;
 typedef BYTE CODE;
@@ -87,6 +88,8 @@ struct V_VALUE
     V_VALUE operator-() const;
     V_VALUE operator+() const;
 
+    V_VALUE &operator[](int key);
+    V_VALUE &operator[](const string &key);
     bool operator<(const V_VALUE &rhs) const;
     bool operator>(const V_VALUE &rhs) const;
     bool operator<=(const V_VALUE &rhs) const;

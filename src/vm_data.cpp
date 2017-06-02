@@ -191,6 +191,18 @@ V_VALUE V_VALUE::operator+() const
 }
 
 
+V_VALUE &V_VALUE::operator[](int key)
+{
+    if(type!=T_ARRAY||key<0||key>=v_array->size())return *(V_VALUE*)nullptr;
+    return (*v_array)[key];
+}
+
+V_VALUE &V_VALUE::operator[](const string &key)
+{
+    if(type!=T_OBJECT)return *(V_VALUE*)nullptr;
+    return (*v_object)[key];
+}
+
 bool V_VALUE::operator<(const V_VALUE &rhs) const
 {
     switch(type)

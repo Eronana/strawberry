@@ -15,10 +15,11 @@ size_t total_size;
 size_t base_size=MIN_GC_SIZE;
 Stack<V_VALUE> *root;
 vector<V_VALUE*> extraRoot;
+bool gc_enable=false;
 #define DEF_NEW_METHOD(A,B) \
 B##_TYPE new##A()\
 {\
-    if(total_size>base_size*2)gc();\
+    if(total_size>base_size*2&&gc_enable)gc();\
     B##_TYPE ret=new B##_OTYPE;\
     total_size+=sizeof(B##_OTYPE);\
     memory_table[ret]={false,sizeof(B##_OTYPE),T_##B};\
@@ -59,7 +60,8 @@ void mark_value(V_VALUE &val)
             if(mark_alive(val.v_object,T_OBJECT))for(auto &x:*val.v_object)mark_value(x.second);
             break;
         case T_FUNCTION:
-            if(mark_alive(val.v_function.external,T_ARRAY))for(auto &x:*val.v_function.external)mark_value(x); 
+            if(mark_alive(val.v_function.external,T_ARRAY))for(auto &x:*val.v_function.external)mark_value(x);
+            if(mark_alive(val.v_function.prototype,T_OBJECT))for(auto &x:*val.v_function.prototype)mark_value(x.second);
             break;
         default:
             break;

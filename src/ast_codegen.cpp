@@ -1,6 +1,9 @@
 #include "ast.h"
 #include "ast_method.h"
 #include <cstdlib>
+int print_count=0;
+int last_object_get=0;
+#define PRINTF(...) print_count++,fprintf(AST::fp,__VA_ARGS__)
 
 #define CODEGEN(M) M->codeGen(symbol)
 #define AST_CODEGEN_ARRAY() {FOREACH(nodes){CODEGEN(x);}}
@@ -90,7 +93,8 @@ DEF_AST_METHOD(ObjectLiteral,AST_CODEGEN)
             PRINTF("reset_this\n");
             this_bak=++this_count;
         }
-        PRINTF("push %s\n",GET_LITERAL(property->identifier).raw.c_str());
+        if(is_identifier(property->identifier))PRINTF("push \"%s\"\n",GET_LITERAL(property->identifier).raw.c_str());
+        else PRINTF("push %s\n",GET_LITERAL(property->identifier).raw.c_str());
         PRINTF("object_set\n");
         PRINTF("pop\n");
     }
@@ -106,20 +110,28 @@ DEF_AST_METHOD(Expression,AST_CODEGEN)
 }
 DEF_AST_METHOD(ArgumentList,AST_CODEGEN)
 {
+    bool isGlobalThis=last_object_get!=print_count;
+    PRINTF("; callee\n");
+    PRINTF("dup\n"); 
+    PRINTF("; this\n");
+    if(isGlobalThis)PRINTF("load_global 0\n");
+    else PRINTF("get_this\n");
     for(int i=nodes.size()-1;~i;i--)
     {
         PRINTF("; arugment %d\n",i);
         CODEGEN(nodes[i]);
     }
-    PRINTF("call %lu\n",nodes.size());
+    PRINTF("call %lu\n",nodes.size()+2);
 }
 
-DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+
 DEF_AST_METHOD(CaseClauseList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(FormalParameterList,AST_CODEGEN) {}
 DEF_AST_METHOD(StatementList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(OperationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 DEF_AST_METHOD(VariableDeclarationList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+DEF_AST_METHOD(MemberExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
+DEF_AST_METHOD(CallExpressionPartList,AST_CODEGEN) AST_CODEGEN_ARRAY()
 
 
 
@@ -138,30 +150,26 @@ DEF_AST_METHOD(PropertyNameAndValue,AST_CODEGEN) {}
 
 DEF_AST_METHOD(MemberPartExpression,AST_CODEGEN)
 {
+    PRINTF("set_this\n");
+    this_count++;
     CODEGEN(expr);
     PRINTF("object_get\n");
+    last_object_get=print_count;
 }
 
 DEF_AST_METHOD(MemberPartIdentifer,AST_CODEGEN)
 {
+    PRINTF("set_this\n");
+    this_count++;
     PRINTF("push \"%s\"\n",GET_LITERAL(identifer).raw.c_str());
     PRINTF("object_get\n");
+    last_object_get=print_count;
 }
 
 DEF_AST_METHOD(MemberExpression,AST_CODEGEN)
 {
     CODEGEN(expr);
     CODEGEN(exprPart);
-}
-
-DEF_AST_METHOD(MemberExpressionPartList,AST_CODEGEN)
-{
-    FOREACH(nodes)
-    {
-        PRINTF("set_this\n");
-        this_count++;
-        CODEGEN(x);
-    }
 }
 
 DEF_AST_METHOD(CallExpression,AST_CODEGEN)
@@ -337,11 +345,11 @@ DEF_AST_METHOD(AssignmentExpression,AST_CODEGEN)
     }
     CODEGEN(assignExpr);
     CODEGEN(expr);
-    PRINTF("swap\n");
+    if(GET_LITERAL(assignOptr).type!=TOKEN_ASSIGN)PRINTF("swap\n");
     switch(GET_LITERAL(assignOptr).type)
     {
         case TOKEN_ASSIGN:
-            PRINTF("mov\n");
+            PRINTF("pop\n");
             break;
         case TOKEN_MUL_ASSIGN:
             PRINTF("mul\n");
