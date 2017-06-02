@@ -217,5 +217,57 @@ for(var i=2;i<1000;i++)
     for(j=2;j*j<=i;j++)if(i%j==0)break;
     if(j*j>i)print(i),print(" ");
 }
+println();
+println('测试prototype和this');
+system.prototypes.Number.sq=function(){
+    return this*this;  
+};
+
+println("(fib(15)^2)^2 is",(function(n){
+    if(n<2)return n;
+    return callee(n-1)+callee(n-2);
+})(15).sq().sq());
+
+println('测试this指向');
+(function(){
+    println(this.prototypes.Number.sq);
+    println(callee);
+})();
+
+
+var Foo=function(name,age){
+    this.name=name;
+    this.age=age;
+};
+Foo.prototype.hello=function(){
+    system.println(this.name,"is",this.age,"years old");
+};
+
+var bar={__proto__:Foo.prototype};
+system.call(bar,Foo,"小明",66);
+bar.hello();
+
+
+var tsetnew=system.new(Foo,"小红",88);
+tsetnew.hello();
+println('测试constructor');
+println(tsetnew.constructor==Foo);
+
+println('目前没有fuck属性');
+println(bar.fuck);
+println(tsetnew.fuck);
+Foo.prototype.fuck=function(name){
+    println(this.name,"fuck",name);
+};
+println('修改了函数的原型后就有了fuck属性');
+println(bar.fuck);
+println(tsetnew.fuck);
+bar.fuck('小红');
+tsetnew.fuck('小明');
+system.prototypes.Function.new=system.__this_new__;
+
+var ttt=tsetnew.constructor.new("小章",233);
+ttt.hello();
+ttt.fuck("小明");
 
 println("\nEND");
