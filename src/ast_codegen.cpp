@@ -9,7 +9,6 @@ int last_object_get=0;
 #define AST_CODEGEN_ARRAY() {FOREACH(nodes){CODEGEN(x);}}
 
 
-bool genReturn;
 void variantMethod(Symbol *symbol,const string &id,const char *method)
 {
     int allowIndex;
@@ -558,13 +557,9 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
     PRINTF("label_%d:\n",funcLabel);
     auto localCount=symbol->localCount;
     if(localCount)PRINTF("addsp %d\n",symbol->localCount);
-    genReturn=false;
     CODEGEN(block);
-    if(!genReturn)
-    {
-        PRINTF("load null\n");
-        PRINTF("ret\n");
-    }
+    PRINTF("load null\n");
+    PRINTF("ret\n");
     // if(localCount)PRINTF("subsp %d\n",symbol->localCount);
     functionStack.pop();
     AST::fp=bak;
@@ -583,7 +578,6 @@ DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
     if(expr)CODEGEN(expr);
     else PRINTF("load null\n");
     PRINTF("ret\n");
-    genReturn=true;
 }
 
 

@@ -11,6 +11,7 @@
 #define CUR_INS_LEN op_length[CUR_INS]
 #define SKIP_INS next_ip+=op_length[NEXT_INS]
 #define KEEP_INS next_ip=ip
+#define v_external v_stack[stack_frame.top().size].v_function.external
 const char *type_name[]={
     "Null",
     "Bool",
@@ -61,12 +62,12 @@ DEF_FUNC(STORE)
 
 DEF_FUNC(LOAD_EXTERNAL)
 {
-    v_stack.push((*v_external.v_array)[get_int32()]);
+    v_stack.push((*v_external)[get_int32()]);
 }
 
 DEF_FUNC(STORE_EXTERNAL)
 {
-    (*v_external.v_array)[get_int32()]=STOP;
+    (*v_external)[get_int32()]=STOP;
 }
 
 DEF_FUNC(NPUSH)
@@ -450,7 +451,6 @@ VirtualMachine::VirtualMachine()
     setRoot(&v_stack);
     addExtraRoot(&reg_this);
     addExtraRoot(&reg_ret);
-    addExtraRoot(&v_external);
 
     auto prototypes = add_object(reg_system,"prototypes");
     auto Object = add_object(prototypes,"Object");
@@ -517,19 +517,17 @@ void VirtualMachine::call(int argc)
     {
         stack_frame.push({l_stack,next_ip,v_stack.size()-argc});
         l_stack=v_stack.size();
-        v_external.type=T_ARRAY;
-        v_external.v_array=func.v_function.external;
         ip=func.v_function.func;
         KEEP_INS;
     }
     else if(func.type==T_NATIVE_FUNCTION)
     {
         auto size=v_stack.size();
+        reg_ret.setNull();
         func.v_native_function(argc,*this);
         v_stack.resize(size);
         v_stack.sub(argc);
         STOP=reg_ret;
-        reg_ret.setNull();
     }
 }
 
@@ -544,11 +542,12 @@ bool VirtualMachine::load(const char *filename)
 }
 extern map<void*,pair<int,bool>> memory_table;
 
-void VirtualMachine::callReturn(int argc)
+V_VALUE VirtualMachine::callReturn(int argc)
 {
     DATATYPE type=v_stack.top(argc).type;
     call(argc);
     if(type==T_FUNCTION)runReturn();
+    return SPOP;
 }
 
 void VirtualMachine::runReturn()

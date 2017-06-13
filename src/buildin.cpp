@@ -116,8 +116,8 @@ BUILD_FUNC_SIGN(gc)
 
 BUILD_FUNC_SIGN(each)
 {
-    auto &v=GET_ARGV(0);
-    auto &f=GET_ARGV(1);
+    auto v=GET_ARGV(0);
+    auto f=GET_ARGV(1);
     if(v.type==T_ARRAY)
     {
         for(int i=0;i<v.v_array->size();i++)

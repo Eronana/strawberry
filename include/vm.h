@@ -35,7 +35,6 @@ class VirtualMachine
     CodeData code_data;
     Stack<V_VALUE> v_stack;
     int l_stack;
-    V_VALUE v_external;
     stack<StackFrame> stack_frame;
     OP_CODE(DECL_FUNC)
     void (VirtualMachine::*op_func[GET_LIST_SIZE()])()={OP_CODE(GET_FUNC_LIST)};
@@ -55,7 +54,7 @@ class VirtualMachine
     void push(const char *);
     void push(const string &s);
     void call(int argc);
-    void callReturn(int argc);
+    V_VALUE callReturn(int argc);
     void runReturn();
     void runStep();
     void object_proto_get(const string &proto,const string &key, V_VALUE &val);
