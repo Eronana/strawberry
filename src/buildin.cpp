@@ -1,6 +1,7 @@
 #include "buildin.h"
 #include "memory.h"
 #include "vm.h"
+#include <cstdlib>
 
 BUILD_FUNC_SIGN(print)
 {
@@ -177,4 +178,10 @@ BUILD_FUNC_SIGN(__this_new__)
 {
     vm.push(GET_THIS());
     GET_BUILDIN_FUNC_NAME(new)(argc+1,vm);
+}
+
+BUILD_FUNC_SIGN(rand)
+{
+    vm.reg_ret.type=T_INT;
+    vm.reg_ret.v_int=rand();
 }

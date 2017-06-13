@@ -20,6 +20,7 @@ T(each)\
 T(call)\
 T(new)\
 T(__this_new__)\
+T(rand)\
 
 #define GET_BUILDIN_FUNC_NAME(NAME) build_in##NAME##_
 #define BUILD_FUNC_SIGN(NAME) NATIVE_FUNCTION_SIGN(GET_BUILDIN_FUNC_NAME(NAME))
