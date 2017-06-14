@@ -28,9 +28,6 @@ Queue.prototype.size = function() {
 
 var INF = 0x3f3f3f3f;
 
-
-
-
 var n=scani(),m=scani();
 var s=scani(),t=scani();
 var N = n+10;
