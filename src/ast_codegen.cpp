@@ -52,17 +52,28 @@ bool is_identifier(const unique_ptr<AST> &expr)
     return ast->token.type==TOKEN_IDENTIFIER;
 }
 
-
 DEF_AST_METHOD(Literal,AST_CODEGEN)
 {
-    if(token.type==TOKEN_IDENTIFIER)
+    switch(token.type)
     {
-        AST_PTR tmp(this);
-        loadVariant(symbol,tmp);
-        tmp.release();
+        case TOKEN_IDENTIFIER:
+        {
+            AST_PTR tmp(this);
+            loadVariant(symbol,tmp);
+            tmp.release();
+        }
+        break;
+        case TOKEN_BIN_INTEGER_LITERAL:
+            PRINTF("push %ld\n",strtol(token.raw.c_str(),NULL,2));
+            break;
+        case TOKEN_OCT_INTEGER_LITERAL:
+        case TOKEN_DEC_INTEGER_LITERAL:
+        case TOKEN_HEX_INTEGER_LITERAL:
+            PRINTF("push %ld\n",strtol(token.raw.c_str(),NULL,0));
+            break;
+        default:
+            PRINTF("push %s\n",token.raw.c_str());
     }
-    
-    else PRINTF("push %s\n",token.raw.c_str());
 }
 DEF_AST_METHOD(ArrayLiteral,AST_CODEGEN)
 {
@@ -149,9 +160,17 @@ DEF_AST_METHOD(PropertyNameAndValue,AST_CODEGEN) {}
 
 DEF_AST_METHOD(MemberPartExpression,AST_CODEGEN)
 {
+    PRINTF("dup\n");
     PRINTF("set_this\n");
-    this_count++;
+    int this_bak=++this_count;
     CODEGEN(expr);
+    PRINTF("swap\n");
+    if(this_bak!=this_count)
+    {
+        PRINTF("set_this\n");
+        this_count++;
+    
+    }else PRINTF("pop\n");
     PRINTF("object_get\n");
     last_object_get=print_count;
 }
