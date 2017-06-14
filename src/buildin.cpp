@@ -185,3 +185,10 @@ BUILD_FUNC_SIGN(rand)
     vm.reg_ret.type=T_INT;
     vm.reg_ret.v_int=rand();
 }
+
+BUILD_FUNC_SIGN(new_array)
+{
+    vm.reg_ret.type=T_ARRAY;
+    vm.reg_ret.v_array=newArray();
+    vm.reg_ret.v_array->resize(GET_ARGV(0).v_int);
+}
