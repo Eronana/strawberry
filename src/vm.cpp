@@ -461,7 +461,7 @@ VirtualMachine::VirtualMachine()
     auto Int = add_object(prototypes,"Int");
     auto Bool = add_object(prototypes,"Bool");
     auto Function = add_object(prototypes,"Function");
-
+    Function[string("new")] = reg_system["__this_new__"];
     object_set(Array,"__proto__",Object);
     object_set(String,"__proto__",Object);
     object_set(Number,"__proto__",Object);
