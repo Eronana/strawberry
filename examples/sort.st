@@ -30,7 +30,7 @@ var printArray = function (a) {
 
 var a = [];
 
-for(var i = 0; i < TEST_SIZE; i++) push(a, rand());
+for(var i = 0; i < TEST_SIZE; i++) push(a, rand()%10007);
 println("排序前:");
 printArray(a);
 sort(a);
