@@ -332,7 +332,13 @@ DEF_FUNC(MOD)
 DEF_FUNC(ADD)
 {
     auto a=SPOP;
-    STOP+=a;
+    if(STOP.type==T_STRING)
+    {
+        STRING_TYPE s=newString();
+        *s=*STOP.v_string+a.toString();
+        STOP.v_string=s;
+    }
+    else STOP+=a;
 }
 DEF_FUNC(SUB)
 {
