@@ -170,6 +170,11 @@ void VirtualMachine::object_proto_get(const string &proto,const string &key, V_V
     if(prototypes.type!=T_OBJECT)val.setNull();
     else object_get(prototypes[proto],key,val);
 }
+bool isnumber(const string &s)
+{
+    for(int i=0;i<s.length();i++)if(s[i]<'0'||s[i]>'9')return false;
+    return true;
+}
 DEF_FUNC(OBJECT_GET)
 {
     switch(reg_this.type)
@@ -180,14 +185,18 @@ DEF_FUNC(OBJECT_GET)
                 object_proto_get("String",STOP.toString(),STOP);
                 if(STOP.type!=T_NULL)break;
             }
-            array_last_index=STOP.toInt();
-            if(array_last_index>=0&&array_last_index<reg_this.v_string->length())
+            if(isnumber(STOP.toString()))
             {
-                STOP.type=T_STRING;
-                STOP.v_string=newString();
-                *STOP.v_string=(*reg_this.v_string)[array_last_index];
+                array_last_index=STOP.toInt();
+                if(array_last_index>=0&&array_last_index<reg_this.v_string->length())
+                {
+                    STOP.type=T_STRING;
+                    STOP.v_string=newString();
+                    *STOP.v_string=(*reg_this.v_string)[array_last_index];
+                    break;
+                }
             }
-            else STOP.setNull();
+            STOP.setNull();
             break;
         case T_ARRAY:
             if(STOP.type==T_STRING)
@@ -195,9 +204,16 @@ DEF_FUNC(OBJECT_GET)
                 object_proto_get("Array",STOP.toString(),STOP);
                 if(STOP.type!=T_NULL)break;
             }
-            array_last_index=STOP.toInt();
-            if(array_last_index>=0&&array_last_index<reg_this.v_array->size())STOP=(*reg_this.v_array)[array_last_index];
-            else STOP.setNull();
+            if(isnumber(STOP.toString()))
+            {
+                array_last_index=STOP.toInt();
+                if(array_last_index>=0&&array_last_index<reg_this.v_array->size())
+                {
+                    STOP=(*reg_this.v_array)[array_last_index];
+                    break;
+                }
+            }
+            STOP.setNull();
             break;
         case T_OBJECT:
             array_last_index=-1;
