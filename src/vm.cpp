@@ -592,11 +592,11 @@ void VirtualMachine::runStep()
 }
 void VirtualMachine::run()
 {
-    unsigned int t=clock();
+    clock_t t=clock();
     ip=code_data.config.entry_point;
     int code_raw_size=code_data.config.code_raw_size;
     while(ip>=0&&ip<code_raw_size&&CUR_INS!=OP_HALT)runStep();
-    printf("halt in %lu clocks\n",clock()-t);
+    printf("halt in %lu clocks.\n",clock()-t);
     //printf("memory_table: %u\n",memory_table.size());
     //gc();printf("memory_table: %u\n",memory_table.size());
     
