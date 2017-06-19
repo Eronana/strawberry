@@ -24,6 +24,15 @@ const char *tmpname()
 }
 int main(int argc,char *argv[])
 {
+    if(argc==1)
+    {
+        printf("Usage: %s filename [options]\n",argv[0]);
+        printf("\t -s compile script to assembly\n");
+        printf("\t -x compile script to binary\n");
+        printf("\t -c compile assembly to binary\n");
+        printf("\t -o set output filename\n");
+        return 0;
+    }
     char *in=argv[1];
     const char *out=NULL;
     if(CodeData::check(in))
