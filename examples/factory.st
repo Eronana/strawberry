@@ -9,6 +9,7 @@ var Human = function (name, age) {
       system.println(this.name + " is the best. I will beat you, " + x.name + ".");
     },
   };
+  return human;
 };
 
 var a = Human('小明', 15);

@@ -577,7 +577,7 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
     auto localCount=symbol->localCount;
     if(localCount)PRINTF("addsp %d\n",symbol->localCount);
     CODEGEN(block);
-    PRINTF("load null\n");
+    PRINTF("push null\n");
     PRINTF("ret\n");
     // if(localCount)PRINTF("subsp %d\n",symbol->localCount);
     functionStack.pop();
@@ -595,7 +595,7 @@ DEF_AST_METHOD(FunctionExpression,AST_CODEGEN)
 DEF_AST_METHOD(ReturnStatement,AST_CODEGEN)
 {
     if(expr)CODEGEN(expr);
-    else PRINTF("load null\n");
+    else PRINTF("push null\n");
     PRINTF("ret\n");
 }
 
